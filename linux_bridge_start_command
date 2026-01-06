@@ -1,5 +1,16 @@
+# install Xquartz on Mac:
+brew install xquartz
+
+# Launch XQuartz
+open -a XQuartz
+
 # creating container: 
-docker run -it --name my-linux -v ~/Desktop:/root -w /root ubuntu:latest bash
+docker run -it --name my-linux -v ~/Desktop:/root -w /root \
+  -e DISPLAY=x.x.x.x:0 \
+  ubuntu:latest bash
+
+# install opengl
+apt update && apt install -y build-essential libglu1-mesa-dev freeglut3-dev mesa-common-dev libgl1-mesa-dev
 
 # cd to folder:
 cd "GCU/Classes Year 4/CST310-graphics"
