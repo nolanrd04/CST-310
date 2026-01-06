@@ -1,0 +1,14 @@
+# creating container: 
+docker run -it --name my-linux -v ~/Desktop:/root -w /root ubuntu:latest bash
+
+# cd to folder:
+cd "GCU/Classes Year 4/CST310-graphics"
+
+# exit container
+exit
+
+# stop container:
+docker stop my-linux
+
+# start container:
+docker start -ai my-linux
