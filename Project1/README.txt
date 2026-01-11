@@ -7,6 +7,7 @@ sudo apt update && sudo apt install -y build-essential libglu1-mesa-dev freeglut
 3. Compile the 2d program:
 g++ Sierpinski.cpp -o sp2d -lglut -lGLU -lGL
 
+---- OPTIONAL STEPS IF X SERVER ISN'T SET UP ----
 4. Start X server
 
 5. Set the display: 
@@ -15,6 +16,7 @@ export DISPLAY=:0
 or make it persistent:
 
 echo "export DISPLAY=:0" >> ~/.bashrc
+-------------------------------------------------
 
 6. Run the 2d program:
 ./sp2d
