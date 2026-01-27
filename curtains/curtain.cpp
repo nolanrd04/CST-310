@@ -106,6 +106,11 @@ GLuint createShaderProgram() {
     return shaderProgram;
 }
 
+// Framebuffer size callback
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
+
 // Generate curtain mesh (vertical rectangle with some subdivisions for better lighting)
 void generateCurtainMesh(float width, float height, int subdivisionsW, int subdivisionsH,
                          float* &vertices, unsigned int* &indices, int &vertexCount, int &indexCount) {
@@ -175,6 +180,9 @@ int main() {
     }
     glfwMakeContextCurrent(window);
     
+    // Set viewport resize callback
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
     // Initialize GLEW
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
@@ -185,6 +193,11 @@ int main() {
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
     
+    // Set initial viewport
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+    
     // Create shader program
     GLuint shaderProgram = createShaderProgram();
     
@@ -192,7 +205,7 @@ int main() {
     float* vertices;
     unsigned int* indices;
     int vertexCount, indexCount;
-    generateCurtainMesh(2.0f, 3.0f, 20, 30, vertices, indices, vertexCount, indexCount);
+    generateCurtainMesh(2.0f, 2.25f, 20, 23, vertices, indices, vertexCount, indexCount);
     
     // Create and bind VAO, VBO, EBO
     GLuint VAO, VBO, EBO;
@@ -228,6 +241,11 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         
+        // Get current window size for correct aspect ratio
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        glViewport(0, 0, width, height);
+        
         // Clear screen
         glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -237,12 +255,14 @@ int main() {
         
         // Set up transformations
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime() * 0.2f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::rotate(model, (float)glfwGetTime() * 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         
         glm::mat4 view = glm::mat4(1.0f);
         view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
         
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        // Use dynamic aspect ratio based on actual window size
+        float aspectRatio = (height > 0) ? (float)width / (float)height : 1.0f;
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
         
         // Set uniforms
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
