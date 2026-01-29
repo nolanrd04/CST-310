@@ -12,7 +12,7 @@ That's it! The program will compile and show you a demo scene with various color
 
 ## Creating Your Own Scenes
 
-Edit the `easy_shapes.cpp` file and add your shapes in the `main()` function. It's incredibly easy:
+Edit the `modeler.cpp` file and add your shapes in the `main()` function. It's incredibly easy:
 
 ```cpp
 // Create a red cube at position (5, 2, 0)

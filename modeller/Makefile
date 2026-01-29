@@ -20,10 +20,10 @@ CXXFLAGS = -std=c++11 -Wall -Wextra
 LIBS = -lGL -lGLEW -lglfw -lm
 
 # Source files
-SRC = modeller.cpp
+SRC = modeler.cpp
 
 # Output executable name
-TARGET = modeller
+TARGET = modeler
 
 # Default target - compiles the program
 all: $(TARGET)
@@ -49,8 +49,14 @@ release: CXXFLAGS += -O3
 release: clean $(TARGET)
 	@echo "Release build complete!"
 
+# Remove Windows Zone.Identifier junk files recursively
+clean-zones:
+	@echo "Removing Zone.Identifier files..."
+	@find . -type f \( -name "*:Zone.Identifier" -o -name "*.Zone.Identifier" -o -name "*Zone.Identifier*" \) -delete
+	@echo "Zone.Identifier cleanup complete!"
+
 # Clean up compiled files
-clean:
+clean: clean-zones
 	@echo "Cleaning up..."
 	rm -f $(TARGET)
 	@echo "Clean complete!"
@@ -79,8 +85,9 @@ help:
 	@echo "  make debug        - Compile with debug symbols"
 	@echo "  make release      - Compile with optimizations"
 	@echo "  make clean        - Remove compiled files"
+	@echo "  make clean-zones  - Remove Zone.Identifier files recursively"
 	@echo "  make install-deps - Install dependencies (Ubuntu/Debian)"
 	@echo "  make help         - Show this help message"
 
 # Phony targets (not actual files)
-.PHONY: all run debug release clean install-deps install-deps-fedora install-deps-arch help
+.PHONY: all run debug release clean clean-zones install-deps install-deps-fedora install-deps-arch help
