@@ -71,9 +71,9 @@ void setupLighting() {
      * This light simulates a directional light (like the sun).
      * Directional lights have parallel rays and no attenuation.
      */
-    GLfloat lightPos[] = { 0.0f, 10.0f, 10.0f, 0.0f }; // Directional light
-    GLfloat lightAmbient[] = { 0.2f, 0.2f, 0.2f, 1.0f }; // Ambient light
-    GLfloat lightDiffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f }; // Diffuse light
+    GLfloat lightPos[] = { 0.0f, 2.0f, 1.0f, 0.0f }; // Directional light
+    GLfloat lightAmbient[] = { 0.9f, 0.9f, 0.9f, 0.0f }; // Ambient light
+    GLfloat lightDiffuse[] = { 1.3f, 1.3f, 1.3f, 1.0f }; // Diffuse light
     GLfloat lightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // Specular light
 
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
@@ -207,17 +207,120 @@ void drawCube(GLfloat size) {
     glEnd();
 }
 
+void drawWindows(int rows, int cols,
+                 GLfloat buildingX, GLfloat buildingY, GLfloat buildingZ,
+                 GLfloat buildingW, GLfloat buildingH, GLfloat buildingD,
+                 GLfloat offsetX = 0.0f, GLfloat offsetY = 0.0f,
+                 GLfloat spacingX = 0.5f, GLfloat spacingY = 0.5f,
+                 GLfloat winWidth = 0.0f, GLfloat winHeight = 0.0f) {
+    // Margin from building edges (in world units)
+    GLfloat marginX = buildingW * 0.05f;
+    GLfloat marginY = buildingH * 0.05f;
+
+    // Window area bounds in world space on the front face
+    GLfloat left   = buildingX - buildingW + marginX + offsetX;
+    GLfloat right  = buildingX + buildingW - marginX + offsetX;
+    GLfloat bottom = buildingY - buildingH + marginY + buildingH * 0.1f + offsetY; // Extra bottom margin
+    GLfloat top    = buildingY + buildingH - marginY + offsetY;
+
+    GLfloat totalWidth  = right - left;
+    GLfloat totalHeight = top - bottom;
+
+    // Compute window size from available space if not specified
+    GLfloat computedW = (totalWidth  - spacingX * (cols - 1)) / cols;
+    GLfloat computedH = (totalHeight - spacingY * (rows - 1)) / rows;
+
+    // Use specified size if provided, otherwise use computed size
+    if (winWidth  <= 0.0f) winWidth  = computedW;
+    if (winHeight <= 0.0f) winHeight = computedH;
+
+    // Center the window grid within the available area
+    GLfloat gridW = cols * winWidth  + (cols - 1) * spacingX;
+    GLfloat gridH = rows * winHeight + (rows - 1) * spacingY;
+    GLfloat startX = buildingX - gridW / 2.0f + offsetX;
+    GLfloat startY = buildingY - gridH / 2.0f + offsetY;
+
+    // Slightly in front of the building face to avoid z-fighting
+    GLfloat frontZ = buildingZ + buildingD + 0.01f;
+
+    glPushMatrix();
+    glLoadIdentity();
+    // Reapply the view matrix (camera) but no building scale
+    GLfloat lookX = cameraX + cosf(cameraAngleX * M_PI / 180.0f) * sinf(cameraAngleY * M_PI / 180.0f);
+    GLfloat lookY = cameraY + sinf(cameraAngleX * M_PI / 180.0f);
+    GLfloat lookZ = cameraZ - cosf(cameraAngleX * M_PI / 180.0f) * cosf(cameraAngleY * M_PI / 180.0f);
+    gluLookAt(cameraX, cameraY, cameraZ,
+              lookX, lookY, lookZ,
+              0.0f, 1.0f, 0.0f);
+
+    setMaterial(0.3f, 0.5f, 0.8f, 80.0f); // Blue glass material
+
+    glBegin(GL_QUADS);
+    glNormal3f(0.0f, 0.0f, 1.0f);
+
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            GLfloat x1 = startX + c * (winWidth + spacingX);
+            GLfloat x2 = x1 + winWidth;
+            GLfloat y1 = startY + r * (winHeight + spacingY);
+            GLfloat y2 = y1 + winHeight;
+
+            glVertex3f(x1, y1, frontZ);
+            glVertex3f(x2, y1, frontZ);
+            glVertex3f(x2, y2, frontZ);
+            glVertex3f(x1, y2, frontZ);
+        }
+    }
+    glEnd();
+    glPopMatrix();
+}
+
 void drawScene()
 {
     // Draw ground plane first (at Y = 0)
     drawGroundPlane();
-    // Draw a cube at the origin
+
+    // Building parameters (world space)
+    GLfloat bx = 0.0f, by = 3.5f, bz = -10.0f; // Position
+    GLfloat sx = 10.0f, sy = 7.0f, sz = 1.0f;   // Scale
+    GLfloat cubeSize = 2.0f;
+    GLfloat halfCube = cubeSize / 2.0f;
+
+    // World-space half-extents of the building
+    GLfloat buildingW = halfCube * sx; // 10
+    GLfloat buildingH = halfCube * sy; // 7
+    GLfloat buildingD = halfCube * sz; // 1
+
+    // Draw the building cube
     glPushMatrix();
-        glTranslatef(0.0f, 1.0f, -10.0f);  // Move cube up so it sits on ground
-        glScalef(10.0f, 10.0f, 1.0f);  // Make cube taller
-        setMaterial(255/255.0f, 245/255.0f, 227/255.0f);  // Light tan material
-        drawCube(2.0f);                  // Draw 2-unit cube
+        glTranslatef(bx, by, bz);
+        glScalef(sx, sy, sz);
+        setMaterial(255/255.0f, 245/255.0f, 227/255.0f);
+        drawCube(cubeSize);
     glPopMatrix();
+
+    // Draw windows independently in world space (no non-uniform scale)
+    // winWidth=2.0, winHeight=2.0 -> square windows in world units
+    // rows, cols = 1, 7 for vertical arrangement
+    // buildingW, buildingH, buildingD for proper placement
+    // bx, by, bz for building position
+    // offsetX=0.0f, offsetY=0.0f for centered grid
+    // spacingX=0.5f, spacingY=2.0f for spacing between windows
+    // maxSizeX, maxSizeY = 2.0f to force square windows
+    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
+                -2.7f, 3.2f, 0.08f, 0.08f, 2.0f, 2.3);
+
+    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
+                -2.7f, 1.4f, 0.08f, 0.08f, 2.0f, 0.7);
+
+    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
+                -2.7f, 0.6f, 0.08f, 0.08f, 2.0f, 0.7);
+
+    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
+                -2.7f, -1.0f, 0.08f, 0.08f, 2.0f, 2.3);
+
+    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
+                -2.7f, -3.6f, 0.08f, 0.08f, 2.0f, 2.3);
 }
 
 void display() 
