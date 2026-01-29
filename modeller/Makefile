@@ -20,10 +20,10 @@ CXXFLAGS = -std=c++11 -Wall -Wextra
 LIBS = -lGL -lGLEW -lglfw -lm
 
 # Source files
-SRC = primitives_3d.cpp
+SRC = modeller.cpp
 
 # Output executable name
-TARGET = primitives_3d
+TARGET = modeller
 
 # Default target - compiles the program
 all: $(TARGET)
