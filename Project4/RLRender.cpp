@@ -49,6 +49,33 @@ const GLfloat ROTATE_SPEED = 2.0f;  // Degrees per key press
 
 GLuint windowTexture;
 
+struct Color {
+    GLfloat r, g, b;
+};
+
+struct WindowStyle {
+    GLfloat r, g, b;       // Top/main color
+    GLfloat splitRatio;    // 1.0 = solid color, 0.7 = top 70% / bottom 30%
+    GLfloat r2, g2, b2;    // Bottom color (used when splitRatio < 1.0)
+};
+
+// Helper: solid color window (no split)
+WindowStyle solid(Color c) {
+    WindowStyle s = { c.r, c.g, c.b, 1.0f, c.r, c.g, c.b };
+    return s;
+}
+
+// Helper: split window with top and bottom colors
+WindowStyle split(Color top, GLfloat ratio, Color bot) {
+    WindowStyle s = { top.r, top.g, top.b, ratio, bot.r, bot.g, bot.b };
+    return s;
+}
+
+// Define your 3 window colors here
+Color winColor1 = { 245.0f/255.0f, 120.0f/255.0f, 34.0f/255.0f };  // Orange
+Color winColor2 = { 0.3f, 0.5f, 0.8f };                             // Blue
+Color winColor3 = { 0.2f, 0.2f, 0.2f };                             // Dark gray
+
 void setMaterial(GLfloat r, GLfloat g, GLfloat b, GLfloat shininess = 50.0f) {
     GLfloat ambient[] = { r * 0.2f, g * 0.2f, b * 0.2f, 1.0f };
     GLfloat diffuse[] = { r, g, b, 1.0f };
@@ -214,10 +241,10 @@ void drawCube(GLfloat size) {
 void drawWindows(int rows, int cols,
                  GLfloat buildingX, GLfloat buildingY, GLfloat buildingZ,
                  GLfloat buildingW, GLfloat buildingH, GLfloat buildingD,
-                 GLfloat offsetX = 0.0f, GLfloat offsetY = 0.0f,
-                 GLfloat spacingX = 0.5f, GLfloat spacingY = 0.5f,
-                 GLfloat winWidth = 0.0f, GLfloat winHeight = 0.0f,
-                 GLfloat matR = 0.3f, GLfloat matG = 0.5f, GLfloat matB = 0.8f) {
+                 GLfloat offsetX, GLfloat offsetY,
+                 GLfloat spacingX, GLfloat spacingY,
+                 GLfloat winWidth, GLfloat winHeight,
+                 WindowStyle* styles = NULL, int styleCount = 0) {
     // Margin from building edges (in world units)
     GLfloat marginX = buildingW * 0.05f;
     GLfloat marginY = buildingH * 0.05f;
@@ -258,7 +285,12 @@ void drawWindows(int rows, int cols,
               lookX, lookY, lookZ,
               0.0f, 1.0f, 0.0f);
 
-    setMaterial(matR, matG, matB, 80.0f);
+    // Default style if none provided: solid blue
+    WindowStyle defaultStyle = { 0.3f, 0.5f, 0.8f, 1.0f, 0.3f, 0.5f, 0.8f };
+    if (styles == NULL) {
+        styles = &defaultStyle;
+        styleCount = 1;
+    }
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, windowTexture);
@@ -266,23 +298,42 @@ void drawWindows(int rows, int cols,
     glBegin(GL_QUADS);
     glNormal3f(0.0f, 0.0f, 1.0f);
 
+    int windowIndex = 0;
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
+            // Pick style for this window (cycles if fewer styles than windows)
+            WindowStyle s = styles[windowIndex % styleCount];
+            windowIndex++;
+
             GLfloat x1 = startX + c * (winWidth + spacingX);
             GLfloat x2 = x1 + winWidth;
             GLfloat y1 = startY + r * (winHeight + spacingY);
             GLfloat y2 = y1 + winHeight;
 
             // Tile the texture based on window size
-            // texScale controls how many world units one texture copy covers
             GLfloat texScale = 1.0f;
             GLfloat texU = winWidth / texScale;
             GLfloat texV = winHeight / texScale;
 
-            glTexCoord2f(0.0f, texV); glVertex3f(x1, y1, frontZ);
-            glTexCoord2f(texU, texV); glVertex3f(x2, y1, frontZ);
-            glTexCoord2f(texU, 0.0f); glVertex3f(x2, y2, frontZ);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(x1, y2, frontZ);
+            // Split point in world space and texture space
+            GLfloat ySplit = y2 - s.splitRatio * winHeight;
+            GLfloat texVSplit = s.splitRatio * texV;
+
+            // Top section
+            setMaterial(s.r, s.g, s.b, 80.0f);
+            glTexCoord2f(0.0f, texVSplit); glVertex3f(x1, ySplit, frontZ);
+            glTexCoord2f(texU, texVSplit); glVertex3f(x2, ySplit, frontZ);
+            glTexCoord2f(texU, 0.0f);     glVertex3f(x2, y2, frontZ);
+            glTexCoord2f(0.0f, 0.0f);     glVertex3f(x1, y2, frontZ);
+
+            // Bottom section (only if there is a split)
+            if (s.splitRatio < 1.0f) {
+                setMaterial(s.r2, s.g2, s.b2, 80.0f);
+                glTexCoord2f(0.0f, texV);      glVertex3f(x1, y1, frontZ);
+                glTexCoord2f(texU, texV);      glVertex3f(x2, y1, frontZ);
+                glTexCoord2f(texU, texVSplit); glVertex3f(x2, ySplit, frontZ);
+                glTexCoord2f(0.0f, texVSplit); glVertex3f(x1, ySplit, frontZ);
+            }
         }
     }
     glEnd();
@@ -316,26 +367,43 @@ void drawScene()
         drawCube(cubeSize);
     glPopMatrix();
 
-    // Draw windows independently in world space (no non-uniform scale)
-    // winWidth=2.0, winHeight=2.0 -> square windows in world units
-    // rows, cols = 1, 7 for vertical arrangement
-    // buildingW, buildingH, buildingD for proper placement
-    // bx, by, bz for building position
-    // offsetX=0.0f, offsetY=0.0f for centered grid
-    // spacingX=0.5f, spacingY=2.0f for spacing between windows
-    // maxSizeX, maxSizeY = 2.0f to force square windows
-    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, 3.2f, 0.08f, 0.08f, 2.0f, 2.3);
+    // ******** Windows ******** //
+    // WindowStyle: { r, g, b, splitRatio, r2, g2, b2 }
+    //   - r,g,b:       top/main color (0.0-1.0)
+    //   - splitRatio:  1.0 = solid color, 0.7 = top 70% / bottom 30%
+    //   - r2,g2,b2:    bottom color (only used when splitRatio < 1.0)
+    //
+    // Pass one style per window, or fewer to cycle through them.
+    // Pass NULL for default blue.
 
+    // Row 1 (top) - tall windows
+    WindowStyle row1Styles[] ={
+        split(winColor1, 0.1f, winColor2),
+        solid(winColor2),
+        split(winColor1, 0.1f, winColor2),
+        solid(winColor1),
+        split(winColor1, 0.5f, winColor2),
+        split(winColor1, 0.5f, winColor2),
+        solid(winColor1)
+    };
+
+    drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
+                -2.7f, 3.2f, 0.08f, 0.08f, 2.0f, 2.3,
+                row1Styles, 7);
+
+    // Row 2 - short windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
                 -2.7f, 1.4f, 0.08f, 0.08f, 2.0f, 0.7);
 
+    // Row 3 - short windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
                 -2.7f, 0.6f, 0.08f, 0.08f, 2.0f, 0.7);
 
+    // Row 4 - tall windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
                 -2.7f, -1.0f, 0.08f, 0.08f, 2.0f, 2.3);
 
+    // Row 5 (bottom) - tall windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
                 -2.7f, -3.6f, 0.08f, 0.08f, 2.0f, 2.3);
 

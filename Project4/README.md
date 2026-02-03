@@ -29,34 +29,34 @@ Install the required development libraries:
 ### Ubuntu/Debian
 ```bash
 sudo apt-get update
-sudo apt-get install build-essential freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev
+sudo apt-get install build-essential freeglut3-dev libgl1-mesa-dev libglu1-mesa-dev libsoil-dev
 ```
 
 ### Fedora/RHEL
 ```bash
-sudo dnf install gcc-c++ freeglut-devel mesa-libGL-devel mesa-libGLU-devel
+sudo dnf install gcc-c++ freeglut-devel mesa-libGL-devel mesa-libGLU-devel SOIL-devel
 ```
 
 ### Arch Linux
 ```bash
-sudo pacman -S base-devel freeglut mesa glu
+sudo pacman -S base-devel freeglut mesa glu soil
 ```
 
 ## Compilation
 
 ### Simple Compilation
 ```bash
-g++ -o example example.cpp -lGL -lGLU -lglut -lm
+g++ -o example RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
 ```
 
 ### With Debugging Symbols
 ```bash
-g++ -g -o example example.cpp -lGL -lGLU -lglut -lm
+g++ -g -o example RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
 ```
 
 ### With Optimizations (for release)
 ```bash
-g++ -O2 -o example example.cpp -lGL -lGLU -lglut -lm
+g++ -O2 -o example RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
 ```
 
 ### Explanation of Flags
@@ -66,6 +66,7 @@ g++ -O2 -o example example.cpp -lGL -lGLU -lglut -lm
 | `-lGL` | Link OpenGL library |
 | `-lGLU` | Link OpenGL Utility library (provides gluLookAt, gluPerspective, etc.) |
 | `-lglut` | Link GLUT library (window management, input handling) |
+| `-lSOIL` | Link SOIL library (texture/image loading) |
 | `-lm` | Link math library (for sin, cos, etc.) |
 
 ## Running the Program
