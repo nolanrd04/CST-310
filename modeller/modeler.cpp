@@ -706,60 +706,76 @@ int main() {
        Just call the make functions with your desired parameters
        ======================================================================== */
     
+    
+
+
     // Ground plane - large, white, positioned below origin
     makePlane(0, -2, 0,           // Position (x, y, z)
               0, 0, 0,             // Rotation (rotX, rotY, rotZ)
               10, 1, 10,           // Scale (scaleX, scaleY, scaleZ)
               0.9, 0.9, 0.9);      // Color (r, g, b) - white
     
-    // Red cube on the left
-    makeCube(-3, 0, 0,             // Position
-             0, 0, 0,              // Rotation
-             1.5, 1.5, 1.5,        // Scale (1.5x bigger)
-             1.0, 0.2, 0.2);       // Color - red
+    // // Red cube on the left
+    // makeCube(-3, 0, 0,             // Position
+    //          0, 0, 0,              // Rotation
+    //          1.5, 1.5, 1.5,        // Scale (1.5x bigger)
+    //          1.0, 0.2, 0.2);       // Color - red
     
-    // Green sphere in the center
-    makeSphere(0, 0, 0,            // Position
-               0, 0, 0,            // Rotation
-               1.2, 1.2, 1.2,      // Scale
-               0.2, 1.0, 0.2);     // Color - green
+    // // Green sphere in the center
+    // makeSphere(0, 0, 0,            // Position
+    //            0, 0, 0,            // Rotation
+    //            1.2, 1.2, 1.2,      // Scale
+    //            0.2, 1.0, 0.2);     // Color - green
     
-    // Blue cylinder on the right
-    makeCylinder(3, 0, 0,          // Position
-                 0, 0, 0,          // Rotation
-                 1, 1, 1,          // Scale
-                 0.2, 0.4, 1.0);   // Color - blue
+    // // Blue cylinder on the right
+    // makeCylinder(3, 0, 0,          // Position
+    //              0, 0, 0,          // Rotation
+    //              1, 1, 1,          // Scale
+    //              0.2, 0.4, 1.0);   // Color - blue
     
-    // Small yellow cube floating above
-    makeCube(0, 2.5, 0,            // Position
-             0, 0, 0,              // Rotation
-             0.7, 0.7, 0.7,        // Scale (smaller)
-             1.0, 1.0, 0.2);       // Color - yellow
+    // // Small yellow cube floating above
+    // makeCube(0, 2.5, 0,            // Position
+    //          0, 0, 0,              // Rotation
+    //          0.7, 0.7, 0.7,        // Scale (smaller)
+    //          1.0, 1.0, 0.2);       // Color - yellow
     
-    // Orange sphere in back left
-    makeSphere(-2, 0, -3,          // Position
-               0, 0, 0,            // Rotation
-               1, 1, 1,            // Scale
-               1.0, 0.5, 0.0);     // Color - orange
+    // // Orange sphere in back left
+    // makeSphere(-2, 0, -3,          // Position
+    //            0, 0, 0,            // Rotation
+    //            1, 1, 1,            // Scale
+    //            1.0, 0.5, 0.0);     // Color - orange
     
-    // Purple sphere in back right
-    makeSphere(2, 0, -3,           // Position
-               0, 0, 0,            // Rotation
-               1, 1, 1,            // Scale
-               0.5, 0.0, 1.0);     // Color - purple
+    // // Purple sphere in back right
+    // makeSphere(2, 0, -3,           // Position
+    //            0, 0, 0,            // Rotation
+    //            1, 1, 1,            // Scale
+    //            0.5, 0.0, 1.0);     // Color - purple
     
-    // Pink rectangle (like a billboard)
-    makeRectangle(-4, 1, -2,       // Position
-                  0, 45, 0,        // Rotation (turned 45° toward camera)
-                  1.5, 2, 1,       // Scale (wide and tall)
-                  1.0, 0.5, 0.8);  // Color - pink
+    // // Pink rectangle (like a billboard)
+    // makeRectangle(-4, 1, -2,       // Position
+    //               0, 45, 0,        // Rotation (turned 45° toward camera)
+    //               1.5, 2, 1,       // Scale (wide and tall)
+    //               1.0, 0.5, 0.8);  // Color - pink
     
-    // Horizontal cylinder (like a log)
-    makeCylinder(4, -1, -1,        // Position
-                 0, 0, 90,         // Rotation (90° around Z = horizontal)
-                 0.3, 2, 0.3,      // Scale (long and thin)
-                 0.6, 0.4, 0.2);   // Color - brown
+    // // Horizontal cylinder (like a log)
+    // makeCylinder(4, -1, -1,        // Position
+    //              0, 0, 90,         // Rotation (90° around Z = horizontal)
+    //              0.3, 2, 0.3,      // Scale (long and thin)
+    //              0.6, 0.4, 0.2);   // Color - brown
     
+    // Tree trunk (brown cylinder)
+    makeCylinder(0, -1, 0, 
+                  0, 0, 0, 
+                  0.5, 3, 0.5, 
+                  0.6, 0.3, 0.1);
+
+    // Tree leaves (green sphere on top)
+    makeSphere(0, 1.5, 0, 
+                0, 0, 0, 
+                2, 2, 2, 
+                0.2, 0.8, 0.2);
+
+
     /* ========================================================================
        RENDER LOOP
        ======================================================================== */
@@ -809,10 +825,10 @@ int main() {
         glUniform3fv(glGetUniformLocation(shaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
         
         // Animate some objects
-        g_objects[1].rotation.y = time * 30.0f;           // Rotate red cube
-        g_objects[2].position.y = sin(time * 2.0f) * 0.5f; // Bounce green sphere
-        g_objects[4].rotation.x = time * 45.0f;            // Rotate yellow cube
-        g_objects[4].rotation.z = time * 60.0f;
+        // g_objects[1].rotation.y = time * 30.0f;           // Rotate red cube
+        // g_objects[2].position.y = sin(time * 2.0f) * 0.5f; // Bounce green sphere
+        // g_objects[4].rotation.x = time * 45.0f;            // Rotate yellow cube
+        // g_objects[4].rotation.z = time * 60.0f;
         
         // Draw all objects
         for (Object3D& obj : g_objects) {
