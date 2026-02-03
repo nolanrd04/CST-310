@@ -30,6 +30,8 @@
 #include <GL/glut.h>    // GLUT: OpenGL Utility Toolkit - handles windows, input, etc.
 #endif
 
+#include <SOIL/SOIL.h>   // For loading textures
+
 #include <cmath>        // For sin(), cos(), M_PI - used in camera calculations
 #include <cstdio>       // For printf() - console output
 #include <cstdlib>      // For exit() - program termination
@@ -44,6 +46,8 @@ GLfloat cameraAngleY = 0.0f;  // Yaw (left/right rotation)
 
 const GLfloat MOVE_SPEED = 0.5f;    // Units per key press
 const GLfloat ROTATE_SPEED = 2.0f;  // Degrees per key press
+
+GLuint windowTexture;
 
 void setMaterial(GLfloat r, GLfloat g, GLfloat b, GLfloat shininess = 50.0f) {
     GLfloat ambient[] = { r * 0.2f, g * 0.2f, b * 0.2f, 1.0f };
@@ -212,7 +216,8 @@ void drawWindows(int rows, int cols,
                  GLfloat buildingW, GLfloat buildingH, GLfloat buildingD,
                  GLfloat offsetX = 0.0f, GLfloat offsetY = 0.0f,
                  GLfloat spacingX = 0.5f, GLfloat spacingY = 0.5f,
-                 GLfloat winWidth = 0.0f, GLfloat winHeight = 0.0f) {
+                 GLfloat winWidth = 0.0f, GLfloat winHeight = 0.0f,
+                 GLfloat matR = 0.3f, GLfloat matG = 0.5f, GLfloat matB = 0.8f) {
     // Margin from building edges (in world units)
     GLfloat marginX = buildingW * 0.05f;
     GLfloat marginY = buildingH * 0.05f;
@@ -253,7 +258,10 @@ void drawWindows(int rows, int cols,
               lookX, lookY, lookZ,
               0.0f, 1.0f, 0.0f);
 
-    setMaterial(0.3f, 0.5f, 0.8f, 80.0f); // Blue glass material
+    setMaterial(matR, matG, matB, 80.0f);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, windowTexture);
 
     glBegin(GL_QUADS);
     glNormal3f(0.0f, 0.0f, 1.0f);
@@ -265,13 +273,21 @@ void drawWindows(int rows, int cols,
             GLfloat y1 = startY + r * (winHeight + spacingY);
             GLfloat y2 = y1 + winHeight;
 
-            glVertex3f(x1, y1, frontZ);
-            glVertex3f(x2, y1, frontZ);
-            glVertex3f(x2, y2, frontZ);
-            glVertex3f(x1, y2, frontZ);
+            // Tile the texture based on window size
+            // texScale controls how many world units one texture copy covers
+            GLfloat texScale = 1.0f;
+            GLfloat texU = winWidth / texScale;
+            GLfloat texV = winHeight / texScale;
+
+            glTexCoord2f(0.0f, texV); glVertex3f(x1, y1, frontZ);
+            glTexCoord2f(texU, texV); glVertex3f(x2, y1, frontZ);
+            glTexCoord2f(texU, 0.0f); glVertex3f(x2, y2, frontZ);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(x1, y2, frontZ);
         }
     }
     glEnd();
+
+    glDisable(GL_TEXTURE_2D);
     glPopMatrix();
 }
 
@@ -280,15 +296,16 @@ void drawScene()
     // Draw ground plane first (at Y = 0)
     drawGroundPlane();
 
+    // ******** Building ******** //
     // Building parameters (world space)
-    GLfloat bx = 0.0f, by = 3.5f, bz = -10.0f; // Position
-    GLfloat sx = 10.0f, sy = 7.0f, sz = 1.0f;   // Scale
+    GLfloat bx = 0.0f, by = 3.25f, bz = -10.0f; // Position
+    GLfloat sx = 10.0f, sy = 6.5f, sz = 1.0f;   // Scale
     GLfloat cubeSize = 2.0f;
     GLfloat halfCube = cubeSize / 2.0f;
 
     // World-space half-extents of the building
     GLfloat buildingW = halfCube * sx; // 10
-    GLfloat buildingH = halfCube * sy; // 7
+    GLfloat buildingH = halfCube * sy; // 6.5
     GLfloat buildingD = halfCube * sz; // 1
 
     // Draw the building cube
@@ -321,6 +338,34 @@ void drawScene()
 
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
                 -2.7f, -3.6f, 0.08f, 0.08f, 2.0f, 2.3);
+
+    
+
+    // ******** Building Roof ******** //
+    bx = 0.0f, by = 9.75f, bz = -10.0f; // Position on top of building
+    sx = 10.0f, sy = 0.25f, sz = 4.0f;   // Scale
+    cubeSize = 2.0f;
+
+    // Draw the roof cube
+    glPushMatrix();
+        glTranslatef(bx, by + halfCube * sy, bz); // Position on top of building
+        glScalef(sx, sy, sz);
+        setMaterial(255/255.0f, 245/255.0f, 227/255.0f); // Red roof
+        drawCube(cubeSize);
+    glPopMatrix();
+
+    // ******** Second Building Roof ******** //
+    bx = 0.0f, by = 10.0f, bz = -10.0f; // Position on top of building
+    sx = 10.0f, sy = 0.15f, sz = 4.0f;   // Scale
+    cubeSize = 2.0f;
+
+    // Draw the roof cube
+    glPushMatrix();
+        glTranslatef(bx, by + halfCube * sy, bz); // Position on top of building
+        glScalef(sx, sy, sz);
+        setMaterial(65/255.0f, 65/255.0f, 65/255.0f); // Red roof
+        drawCube(cubeSize);
+    glPopMatrix();
 }
 
 void display() 
@@ -428,6 +473,29 @@ void specialKeys(int key, int x, int y)
     glutPostRedisplay();
 }
 
+GLuint loadTexture(const char* filename) {
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height;
+    unsigned char* image = SOIL_load_image(filename, &width, &height, 0, SOIL_LOAD_RGB);
+    if (!image) {
+        printf("Failed to load texture: %s\n", filename);
+        return 0;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    SOIL_free_image_data(image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return texID;
+}
+
 void init()
 {
     glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D
@@ -435,6 +503,9 @@ void init()
     glDepthFunc(GL_LEQUAL); // Type of depth test
     glShadeModel(GL_SMOOTH); // Smooth shading
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective corrections
+    glEnable(GL_NORMALIZE); // Normalize normals for scaled objects
+
+    windowTexture = loadTexture("window_texture.png");
 }
 
 int main(int argc, char** argv) 
