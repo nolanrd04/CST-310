@@ -1,5 +1,4 @@
 // main.cpp
-// Minimal: GLFW + GLAD + GLM, modern OpenGL (3.3 core)
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -118,7 +117,7 @@ int main() {
         B.x,B.y,B.z,  C.x,C.y,C.z,  P.x,P.y,P.z,
         C.x,C.y,C.z,  D.x,D.y,D.z,  P.x,P.y,P.z,
         D.x,D.y,D.z,  A.x,A.y,A.z,  P.x,P.y,P.z,
-        // base (two triangles, CCW when looking from below; fine for simple demo)
+        // base (two triangles, CCW when looking from below)
         A.x,A.y,A.z,  C.x,C.y,C.z,  B.x,B.y,B.z,
         A.x,A.y,A.z,  D.x,D.y,D.z,  C.x,C.y,C.z
     };
