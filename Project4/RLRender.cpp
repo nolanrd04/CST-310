@@ -71,7 +71,7 @@ WindowStyle split(Color top, GLfloat ratio, Color bot) {
     return s;
 }
 
-// Define your 3 window colors here
+// window colors
 Color winColor1 = { 137.0f/255.0f, 144.0f/255.0f, 196.0f/255.0f };  // Dark Blue
 Color winColor2 = { 65.0f/255.0f, 67.0f/255.0f, 82.0f/255.0f }; // Almost black
 Color winColor3 = { 201.0f/255.0f, 206.0f/255.0f, 242.0f/255.0f }; // gray
