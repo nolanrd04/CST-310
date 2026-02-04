@@ -72,9 +72,11 @@ WindowStyle split(Color top, GLfloat ratio, Color bot) {
 }
 
 // Define your 3 window colors here
-Color winColor1 = { 245.0f/255.0f, 120.0f/255.0f, 34.0f/255.0f };  // Orange
-Color winColor2 = { 0.3f, 0.5f, 0.8f };                             // Blue
-Color winColor3 = { 0.2f, 0.2f, 0.2f };                             // Dark gray
+Color winColor1 = { 137.0f/255.0f, 144.0f/255.0f, 196.0f/255.0f };  // Dark Blue
+Color winColor2 = { 65.0f/255.0f, 67.0f/255.0f, 82.0f/255.0f }; // Almost black
+Color winColor3 = { 201.0f/255.0f, 206.0f/255.0f, 242.0f/255.0f }; // gray
+Color winColor4 = { 201.0f/255.0f, 242.0f/255.0f, 233.0f/255.0f };
+Color winColor5 = {155.0f/255.0f, 189.0f/255.0f, 181.0f/255.0f};
 
 void setMaterial(GLfloat r, GLfloat g, GLfloat b, GLfloat shininess = 50.0f) {
     GLfloat ambient[] = { r * 0.2f, g * 0.2f, b * 0.2f, 1.0f };
@@ -376,15 +378,59 @@ void drawScene()
     // Pass one style per window, or fewer to cycle through them.
     // Pass NULL for default blue.
 
-    // Row 1 (top) - tall windows
+    // Row 1 window coloring styles
     WindowStyle row1Styles[] ={
-        split(winColor1, 0.1f, winColor2),
-        solid(winColor2),
-        split(winColor1, 0.1f, winColor2),
+        split(winColor3, 0.1f, winColor2),
         solid(winColor1),
+        split(winColor3, 0.1f, winColor1),
+        solid(winColor3),
+        split(winColor3, 0.6f, winColor1),
+        split(winColor3, 0.6f, winColor1),
+        solid(winColor3)
+    };
+
+    // Row 2 window coloring styles
+    WindowStyle row2Styles[] ={
+        solid(winColor2),
         split(winColor1, 0.5f, winColor2),
         split(winColor1, 0.5f, winColor2),
-        solid(winColor1)
+        split(winColor1, 0.5f, winColor2),
+        split(winColor1, 0.5f, winColor2),
+        split(winColor1, 0.5f, winColor2),
+        split(winColor1, 0.5f, winColor2)
+    };
+
+    // Row 3 window coloring styles
+    WindowStyle row3Styles[] ={
+        solid(winColor4),
+        solid(winColor4),
+        solid(winColor4),
+        solid(winColor4),
+        solid(winColor4),
+        solid(winColor4),
+        solid(winColor4)
+    };
+    
+    // Row 4 window coloring styles
+    WindowStyle row4Styles[] ={
+        split(winColor4, 0.64f, winColor2),
+        split(winColor4, 0.35f, winColor2),
+        solid(winColor4),
+        split(winColor4, 0.17, winColor2),
+        split(winColor4, 0.8f, winColor2),
+        split(winColor4, 0.85f, winColor2),
+        split(winColor4, 0.90f, winColor2)
+    };
+
+    // Row 5 window coloring styles
+    WindowStyle row5Styles[] ={
+        solid(winColor5),
+        solid(winColor5),
+        solid(winColor5),
+        solid(winColor5),
+        solid(winColor5),
+        solid(winColor5),
+        solid(winColor5)
     };
 
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
@@ -393,20 +439,23 @@ void drawScene()
 
     // Row 2 - short windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, 1.4f, 0.08f, 0.08f, 2.0f, 0.7);
+                -2.7f, 1.4f, 0.08f, 0.08f, 2.0f, 0.7,
+                row2Styles, 7);
 
     // Row 3 - short windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, 0.6f, 0.08f, 0.08f, 2.0f, 0.7);
+                -2.7f, 0.6f, 0.08f, 0.08f, 2.0f, 0.7,
+                row3Styles, 7);
 
     // Row 4 - tall windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, -1.0f, 0.08f, 0.08f, 2.0f, 2.3);
+                -2.7f, -1.0f, 0.08f, 0.08f, 2.0f, 2.3,
+                row4Styles, 7);
 
     // Row 5 (bottom) - tall windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, -3.6f, 0.08f, 0.08f, 2.0f, 2.3);
-
+                -2.7f, -3.6f, 0.08f, 0.08f, 2.0f, 2.3,
+                row5Styles, 7);
     
 
     // ******** Building Roof ******** //
