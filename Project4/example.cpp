@@ -1228,9 +1228,9 @@ void keyboard(unsigned char key, int x, int y) {
          */
         case 'r':
         case 'R':
-            cameraX = 0.0f;
+            cameraX = 1.5f;
             cameraY = 5.0f;
-            cameraZ = 15.0f;
+            cameraZ = 11.45f;
             cameraAngleX = 0.0f;
             cameraAngleY = 0.0f;
             break;

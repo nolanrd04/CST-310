@@ -37,9 +37,9 @@
 #include <cstdlib>      // For exit() - program termination
 
 
-GLfloat cameraX = 0.0f;
-GLfloat cameraY = 5.0f;
-GLfloat cameraZ = 15.0f;
+GLfloat cameraX = -1.0f;
+GLfloat cameraY = 3.25f;
+GLfloat cameraZ = 15.95f;
 
 GLfloat cameraAngleX = 0.0f;  // Pitch (up/down rotation)
 GLfloat cameraAngleY = 0.0f;  // Yaw (left/right rotation)
@@ -48,6 +48,8 @@ const GLfloat MOVE_SPEED = 0.5f;    // Units per key press
 const GLfloat ROTATE_SPEED = 2.0f;  // Degrees per key press
 
 GLuint windowTexture;
+int windowWidth = 800;
+int windowHeight = 600;
 
 struct Color {
     GLfloat r, g, b;
@@ -115,6 +117,51 @@ void setupLighting() {
     glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
 
     glEnable(GL_LIGHT0); // Activate the light source
+}
+
+void drawBitmapText(const char* text, GLfloat x, GLfloat y, void* font = GLUT_BITMAP_HELVETICA_18) {
+    glRasterPos2f(x, y);
+    for (const char* c = text; *c != '\0'; ++c) {
+        glutBitmapCharacter(font, *c);
+    }
+}
+
+void drawCameraCoordinatesOverlay() {
+    char coordinateText[96];
+    std::snprintf(
+        coordinateText,
+        sizeof(coordinateText),
+        "Camera: X %.2f  Y %.2f  Z %.2f",
+        cameraX, cameraY, cameraZ
+    );
+
+    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0.0, static_cast<GLdouble>(windowWidth), 0.0, static_cast<GLdouble>(windowHeight));
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Draw a light shadow under the text so it stays readable on bright areas.
+    glColor3f(0.95f, 0.95f, 0.95f);
+    drawBitmapText(coordinateText, 11.0f, static_cast<GLfloat>(windowHeight - 19));
+
+    glColor3f(0.0f, 0.0f, 0.0f);
+    drawBitmapText(coordinateText, 10.0f, static_cast<GLfloat>(windowHeight - 20));
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glPopAttrib();
 }
 
 
@@ -240,6 +287,181 @@ void drawCube(GLfloat size) {
     glEnd();
 }
 
+void drawWindowFrame(GLfloat centerX, GLfloat centerY, GLfloat frontFaceZ,
+                     GLfloat frameWidth, GLfloat frameHeight,
+                     GLfloat frameDepth, GLfloat borderThickness,
+                     GLfloat dividerThickness) {
+    GLfloat halfW = frameWidth * 0.5f;
+    GLfloat halfH = frameHeight * 0.5f;
+    GLfloat centerZ = frontFaceZ + frameDepth * 0.5f;
+    GLfloat innerHeight = frameHeight - (2.0f * borderThickness);
+
+    if (innerHeight < borderThickness) {
+        innerHeight = borderThickness;
+    }
+
+    // Frame color similar to the metal/aluminum look in your reference image.
+    setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
+
+    // Left vertical bar
+    glPushMatrix();
+        glTranslatef(centerX - halfW + borderThickness * 0.5f, centerY, centerZ);
+        glScalef(borderThickness, frameHeight, frameDepth);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Right vertical bar
+    glPushMatrix();
+        glTranslatef(centerX + halfW - borderThickness * 0.5f, centerY, centerZ);
+        glScalef(borderThickness, frameHeight, frameDepth);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Top horizontal bar
+    glPushMatrix();
+        glTranslatef(centerX, centerY + halfH - borderThickness * 0.5f, centerZ);
+        glScalef(frameWidth, borderThickness, frameDepth);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Bottom horizontal bar
+    glPushMatrix();
+        glTranslatef(centerX, centerY - halfH + borderThickness * 0.5f, centerZ);
+        glScalef(frameWidth, borderThickness, frameDepth);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Center divider (gives the two-panel frame look)
+    glPushMatrix();
+        glTranslatef(centerX, centerY, centerZ);
+        glScalef(dividerThickness, innerHeight, frameDepth);
+        drawCube(1.0f);
+    glPopMatrix();
+}
+
+void drawWindowTextureOverlay(GLfloat centerX, GLfloat centerY, GLfloat frontFaceZ,
+                              GLfloat frameWidth, GLfloat frameHeight,
+                              GLfloat frameDepth, GLfloat alpha,
+                              GLfloat forwardOffset,
+                              GLfloat texVTop = 0.0f,
+                              GLfloat texVBottom = 1.0f) {
+    GLfloat halfW = frameWidth * 0.5f;
+    GLfloat halfH = frameHeight * 0.5f;
+    GLfloat overlayZ = frontFaceZ + frameDepth + forwardOffset;
+
+    glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                 GL_CURRENT_BIT | GL_TEXTURE_BIT | GL_LIGHTING_BIT);
+
+    glDisable(GL_LIGHTING);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, windowTexture);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Keep depth testing on so the pane still respects occluders,
+    // but do not write depth for this transparent pass.
+    glDepthMask(GL_FALSE);
+    glColor4f(1.0f, 1.0f, 1.0f, alpha);
+
+    glBegin(GL_QUADS);
+        glNormal3f(0.0f, 0.0f, 1.0f);
+        glTexCoord2f(0.0f, texVTop);    glVertex3f(centerX - halfW, centerY + halfH, overlayZ);
+        glTexCoord2f(1.0f, texVTop);    glVertex3f(centerX + halfW, centerY + halfH, overlayZ);
+        glTexCoord2f(1.0f, texVBottom); glVertex3f(centerX + halfW, centerY - halfH, overlayZ);
+        glTexCoord2f(0.0f, texVBottom); glVertex3f(centerX - halfW, centerY - halfH, overlayZ);
+    glEnd();
+
+    glDepthMask(GL_TRUE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPopAttrib();
+}
+
+void drawElectricalOutlet(GLfloat centerX, GLfloat centerY, GLfloat wallFrontZ) {
+    // Slight depth offsets keep the layered pieces from z-fighting.
+    GLfloat plateWidth = 0.58f;
+    GLfloat plateHeight = 0.90f;
+    GLfloat plateDepth = 0.03f;
+
+    GLfloat insetWidth = 0.50f;
+    GLfloat insetHeight = 0.82f;
+    GLfloat insetDepth = 0.015f;
+
+    GLfloat detailDepth = 0.01f;
+
+    // Outer wall plate.
+    glPushMatrix();
+        glTranslatef(centerX, centerY, wallFrontZ + plateDepth * 0.5f);
+        glScalef(plateWidth, plateHeight, plateDepth);
+        setMaterial(0.90f, 0.89f, 0.85f, 30.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Inner raised face.
+    glPushMatrix();
+        glTranslatef(centerX, centerY, wallFrontZ + plateDepth + insetDepth * 0.5f);
+        glScalef(insetWidth, insetHeight, insetDepth);
+        setMaterial(0.95f, 0.94f, 0.90f, 20.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Top and bottom screws.
+    glPushMatrix();
+        glTranslatef(centerX, centerY + 0.32f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.05f, 0.05f, detailDepth);
+        setMaterial(0.45f, 0.45f, 0.45f, 60.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(centerX, centerY - 0.32f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.05f, 0.05f, detailDepth);
+        setMaterial(0.45f, 0.45f, 0.45f, 60.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Upper receptacle slots.
+    glPushMatrix();
+        glTranslatef(centerX - 0.08f, centerY + 0.16f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.03f, 0.14f, detailDepth);
+        setMaterial(0.08f, 0.08f, 0.08f, 5.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(centerX + 0.08f, centerY + 0.16f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.03f, 0.14f, detailDepth);
+        setMaterial(0.08f, 0.08f, 0.08f, 5.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(centerX, centerY + 0.08f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.07f, 0.05f, detailDepth);
+        setMaterial(0.08f, 0.08f, 0.08f, 5.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Lower receptacle slots.
+    glPushMatrix();
+        glTranslatef(centerX - 0.08f, centerY - 0.16f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.03f, 0.14f, detailDepth);
+        setMaterial(0.08f, 0.08f, 0.08f, 5.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(centerX + 0.08f, centerY - 0.16f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.03f, 0.14f, detailDepth);
+        setMaterial(0.08f, 0.08f, 0.08f, 5.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(centerX, centerY - 0.24f, wallFrontZ + plateDepth + insetDepth + detailDepth * 0.5f);
+        glScalef(0.07f, 0.05f, detailDepth);
+        setMaterial(0.08f, 0.08f, 0.08f, 5.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+}
+
 void drawWindows(int rows, int cols,
                  GLfloat buildingX, GLfloat buildingY, GLfloat buildingZ,
                  GLfloat buildingW, GLfloat buildingH, GLfloat buildingD,
@@ -347,7 +569,7 @@ void drawWindows(int rows, int cols,
 void drawScene()
 {
     // Draw ground plane first (at Y = 0)
-    drawGroundPlane();
+    // drawGroundPlane();
 
     // ******** Building ******** //
     // Building parameters (world space)
@@ -365,6 +587,7 @@ void drawScene()
     glPushMatrix();
         glTranslatef(bx, by, bz);
         glScalef(sx, sy, sz);
+        //setMaterial(239.0f/255.0f, 220.0f/255.0f, 198.0f/255.0f); // Warm light facade color from reference.
         setMaterial(255/255.0f, 245/255.0f, 227/255.0f);
         drawCube(cubeSize);
     glPopMatrix();
@@ -434,29 +657,152 @@ void drawScene()
     };
 
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, 3.2f, 0.08f, 0.08f, 2.0f, 2.3,
+                -2.7f, 2.2f, 0.08f, 0.08f, 2.0f, 2.3,
                 row1Styles, 7);
 
     // Row 2 - short windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, 1.4f, 0.08f, 0.08f, 2.0f, 0.7,
+                -2.7f, 0.4f, 0.08f, 0.08f, 2.0f, 0.7,
                 row2Styles, 7);
 
     // Row 3 - short windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, 0.6f, 0.08f, 0.08f, 2.0f, 0.7,
+                -2.7f, -0.4f, 0.08f, 0.08f, 2.0f, 0.7,
                 row3Styles, 7);
 
     // Row 4 - tall windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, -1.0f, 0.08f, 0.08f, 2.0f, 2.3,
+                -2.7f, -2.0f, 0.08f, 0.08f, 2.0f, 2.3,
                 row4Styles, 7);
 
     // Row 5 (bottom) - tall windows
     drawWindows(1, 7, bx, by, bz, buildingW, buildingH, buildingD,
-                -2.7f, -3.6f, 0.08f, 0.08f, 2.0f, 2.3,
+                -2.7f, -4.6f, 0.08f, 0.08f, 2.0f, 2.3,
                 row5Styles, 7);
-    
+
+    // ******** Two Window Frames ******** //
+    GLfloat frameWidth = 15.4f;
+    GLfloat frameHeight = 14.0f;
+    GLfloat frameDepth = 0.12f;
+    GLfloat frameBorderThickness = 0.28f;
+    GLfloat frameDividerThickness = 0.25f;
+
+    GLfloat frameFrontFaceZ = -6.0f;
+    GLfloat horizontalShift = -0.5f; // Shift frame, curtain, and wall together.
+    GLfloat leftFrameX = -2.25f + horizontalShift;  // CHANGE FRAME POSITION: move left/right for left frame
+    GLfloat leftFrameY = 6.5f;   // CHANGE FRAME POSITION: move up/down for left frame
+    drawWindowFrame(leftFrameX, leftFrameY, frameFrontFaceZ,
+                    frameWidth, frameHeight, frameDepth,
+                    frameBorderThickness, frameDividerThickness);
+
+    GLfloat glassAlpha = 0.225f;
+    GLfloat glassForwardOffset = 0.02f;
+    drawWindowTextureOverlay(leftFrameX, leftFrameY, frameFrontFaceZ,
+                             frameWidth, frameHeight, frameDepth,
+                             glassAlpha, glassForwardOffset);
+
+    // ******** Right Curtain Planes ******** //
+    // Keep curtain aligned with frame height/depth but offset right so it does not block the frame.
+    GLfloat frameRightEdgeX = leftFrameX + frameWidth * 0.5f - 0.25f;
+    GLfloat curtainGap = 0.50f;
+    GLfloat curtainDepth = 0.03f;
+    GLfloat curtainRightExtension = 1.1f; // Make the right curtain a little longer to the right.
+    GLfloat curtainCenterY = leftFrameY + 1.0f;
+    GLfloat curtainCenterZ = frameFrontFaceZ + frameDepth * 0.5f + 0.05f;
+    GLfloat curtainLeftX = frameRightEdgeX + curtainGap;
+    GLfloat curtainRightX = curtainCenterZ + 12.0f + horizontalShift + curtainRightExtension;
+    if (curtainRightX < curtainLeftX + 0.5f) {
+        curtainRightX = curtainLeftX + 0.5f;
+    }
+    GLfloat curtainWidth = curtainRightX - curtainLeftX;
+    GLfloat curtainCenterX = (curtainLeftX + curtainRightX) * 0.5f;
+
+    // Main curtain panel in dark gray, slightly darker than the frame metal color.
+    glPushMatrix();
+        glTranslatef(curtainCenterX, curtainCenterY, curtainCenterZ);
+        glScalef(curtainWidth, frameHeight, curtainDepth);
+        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    GLfloat curtainOverlayAlpha = 0.1f;
+    GLfloat curtainOverlayForwardOffset = 0.015f;
+
+    // Bottom curtain band (matches the lower section visible in the reference image).
+    GLfloat curtainBottomBandHeight = 0.38f;
+    GLfloat curtainBottomBandCenterY = leftFrameY - frameHeight * 0.5f + curtainBottomBandHeight * 0.5f;
+    glPushMatrix();
+        glTranslatef(curtainCenterX, curtainBottomBandCenterY, curtainCenterZ + 0.01f);
+        glScalef(curtainWidth, curtainBottomBandHeight, curtainDepth);
+        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Map both curtain planes into one shared V range so the texture continues downward.
+    GLfloat mainCurtainTopY = curtainCenterY + frameHeight * 0.5f;
+    GLfloat mainCurtainBottomY = curtainCenterY - frameHeight * 0.5f;
+    GLfloat bottomBandTopY = curtainBottomBandCenterY + curtainBottomBandHeight * 0.5f;
+    GLfloat bottomBandBottomY = curtainBottomBandCenterY - curtainBottomBandHeight * 0.5f;
+    GLfloat combinedOverlayHeight = mainCurtainTopY - bottomBandBottomY;
+    if (combinedOverlayHeight < 0.001f) {
+        combinedOverlayHeight = 0.001f;
+    }
+
+    GLfloat mainTexVTop = 0.0f;
+    GLfloat mainTexVBottom = (mainCurtainTopY - mainCurtainBottomY) / combinedOverlayHeight;
+    GLfloat bandTexVTop = (mainCurtainTopY - bottomBandTopY) / combinedOverlayHeight;
+    GLfloat bandTexVBottom = 1.0f;
+
+    drawWindowTextureOverlay(curtainCenterX, curtainCenterY,
+                             curtainCenterZ - curtainDepth * 0.5f,
+                             curtainWidth, frameHeight, curtainDepth,
+                             curtainOverlayAlpha, curtainOverlayForwardOffset,
+                             mainTexVTop, mainTexVBottom);
+    drawWindowTextureOverlay(curtainCenterX, curtainBottomBandCenterY,
+                             (curtainCenterZ + 0.01f) - curtainDepth * 0.5f,
+                             curtainWidth, curtainBottomBandHeight, curtainDepth,
+                             curtainOverlayAlpha, curtainOverlayForwardOffset,
+                             bandTexVTop, bandTexVBottom);
+
+    // Bridge the texture through the vertical gap so the pattern is continuous.
+    GLfloat gapTopY = mainCurtainBottomY;
+    GLfloat gapBottomY = bottomBandTopY;
+    GLfloat gapHeight = gapTopY - gapBottomY;
+    if (gapHeight > 0.001f) {
+        GLfloat gapCenterY = (gapTopY + gapBottomY) * 0.5f;
+        drawWindowTextureOverlay(curtainCenterX, gapCenterY,
+                                 (curtainCenterZ + 0.005f) - curtainDepth * 0.5f,
+                                 curtainWidth, gapHeight, curtainDepth,
+                                 curtainOverlayAlpha, curtainOverlayForwardOffset,
+                                 mainTexVBottom, bandTexVTop);
+    }
+
+    // Bottom wall section under the frame (same thickness/depth as frame).
+    GLfloat wallSectionTopY = leftFrameY - frameHeight * 0.5f;
+    GLfloat wallSectionBottomY = by - buildingH - 3.0f;
+    GLfloat wallSectionHeight = wallSectionTopY - wallSectionBottomY;
+
+    // CHANGE WALL WIDTH: adjust these two values to span the full projection window bottom.
+    GLfloat wallSectionLeftX = bx - buildingW + 0.25f + horizontalShift;
+    GLfloat wallSectionRightX = bx + buildingW - 0.25f + horizontalShift;
+    GLfloat wallSectionWidth = wallSectionRightX - wallSectionLeftX;
+    GLfloat wallSectionCenterX = (wallSectionLeftX + wallSectionRightX) * 0.5f;
+
+    GLfloat wallSectionCenterY = wallSectionBottomY + wallSectionHeight * 0.5f;
+    GLfloat wallSectionCenterZ = (frameFrontFaceZ - 0.01f) + frameDepth * 0.5f;
+
+    glPushMatrix();
+        glTranslatef(wallSectionCenterX, wallSectionCenterY, wallSectionCenterZ);
+        glScalef(wallSectionWidth, wallSectionHeight, frameDepth); // Same depth as frame thickness.
+        setMaterial(225.0f/255.0f, 184.0f/255.0f, 142.0f/255.0f); // Warm orange-beige wall color from reference.
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Wall outlet positioned low on the wall like the reference image.
+    GLfloat wallFrontZ = wallSectionCenterZ + frameDepth * 0.5f;
+    GLfloat outletX = wallSectionCenterX + wallSectionWidth * 0.15f;
+    GLfloat outletY = wallSectionBottomY + wallSectionHeight * 0.5f;
+    drawElectricalOutlet(outletX, outletY, wallFrontZ);
 
     // ******** Building Roof ******** //
     bx = 0.0f, by = 9.75f, bz = -10.0f; // Position on top of building
@@ -467,6 +813,7 @@ void drawScene()
     glPushMatrix();
         glTranslatef(bx, by + halfCube * sy, bz); // Position on top of building
         glScalef(sx, sy, sz);
+        //setMaterial(205.0f/255.0f, 170.0f/255.0f, 134.0f/255.0f); // Warm tan roof color from reference.
         setMaterial(255/255.0f, 245/255.0f, 227/255.0f); // Red roof
         drawCube(cubeSize);
     glPopMatrix();
@@ -480,6 +827,7 @@ void drawScene()
     glPushMatrix();
         glTranslatef(bx, by + halfCube * sy, bz); // Position on top of building
         glScalef(sx, sy, sz);
+        //setMaterial(108.0f/255.0f, 85.0f/255.0f, 62.0f/255.0f); // Dark warm roof trim color from reference.
         setMaterial(65/255.0f, 65/255.0f, 65/255.0f); // Red roof
         drawCube(cubeSize);
     glPopMatrix();
@@ -501,12 +849,15 @@ void display()
 
     setupLighting();
     drawScene();
+    //drawCameraCoordinatesOverlay();
     glutSwapBuffers();
 }
 
 void reshape(int width, int height) 
 {
     if (height == 0) height = 1; // Prevent division by zero
+    windowWidth = width;
+    windowHeight = height;
     GLfloat aspect = (GLfloat)width / (GLfloat)height;
 
     glViewport(0, 0, width, height);
@@ -556,9 +907,9 @@ void keyboard(unsigned char key, int x, int y)
         // reset position
         case 'r':
         case 'R':
-            cameraX = 0.0f;
+            cameraX = 1.5f;
             cameraY = 5.0f;
-            cameraZ = 15.0f;
+            cameraZ = 11.45f;
             cameraAngleX = 0.0f;
             cameraAngleY = 0.0f;
             break;
@@ -629,7 +980,7 @@ int main(int argc, char** argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-    glutInitWindowSize(800, 600);
+    glutInitWindowSize(625, 738);
     glutCreateWindow("3D Scene with Camera and Lighting");
 
     init();
