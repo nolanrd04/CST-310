@@ -365,17 +365,71 @@ void drawWindowTextureOverlay(GLfloat centerX, GLfloat centerY, GLfloat frontFac
     glDepthMask(GL_FALSE);
     glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
+    GLfloat texScale = 1.0f;
+    GLfloat texU = (halfW * 2.0f) / texScale;
+    GLfloat texV = (halfH * 2.0f) / texScale;
+    GLfloat texVTopScaled = texVTop * texV;
+    GLfloat texVBottomScaled = texVBottom * texV;
+
     glBegin(GL_QUADS);
         glNormal3f(0.0f, 0.0f, 1.0f);
-        glTexCoord2f(0.0f, texVTop);    glVertex3f(centerX - halfW, centerY + halfH, overlayZ);
-        glTexCoord2f(1.0f, texVTop);    glVertex3f(centerX + halfW, centerY + halfH, overlayZ);
-        glTexCoord2f(1.0f, texVBottom); glVertex3f(centerX + halfW, centerY - halfH, overlayZ);
-        glTexCoord2f(0.0f, texVBottom); glVertex3f(centerX - halfW, centerY - halfH, overlayZ);
+        glTexCoord2f(0.0f, texVTopScaled);    glVertex3f(centerX - halfW, centerY + halfH, overlayZ);
+        glTexCoord2f(texU,  texVTopScaled);    glVertex3f(centerX + halfW, centerY + halfH, overlayZ);
+        glTexCoord2f(texU,  texVBottomScaled); glVertex3f(centerX + halfW, centerY - halfH, overlayZ);
+        glTexCoord2f(0.0f, texVBottomScaled); glVertex3f(centerX - halfW, centerY - halfH, overlayZ);
     glEnd();
 
     glDepthMask(GL_TRUE);
     glBindTexture(GL_TEXTURE_2D, 0);
     glPopAttrib();
+}
+
+void drawSphere(GLfloat cx, GLfloat cy, GLfloat cz,
+                GLfloat r, int slices, int stacks) {
+    for (int i = 0; i < stacks; i++) {
+        GLfloat lat0 = M_PI * (-0.5f + (GLfloat)i / stacks);
+        GLfloat lat1 = M_PI * (-0.5f + (GLfloat)(i + 1) / stacks);
+        GLfloat y0 = sinf(lat0);
+        GLfloat y1 = sinf(lat1);
+        GLfloat r0 = cosf(lat0);
+        GLfloat r1 = cosf(lat1);
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= slices; j++) {
+            GLfloat lng = 2.0f * M_PI * j / slices;
+            GLfloat lx = cosf(lng);
+            GLfloat lz = sinf(lng);
+
+            glNormal3f(lx * r0, y0, lz * r0);
+            glVertex3f(cx + r * lx * r0, cy + r * y0, cz + r * lz * r0);
+            glNormal3f(lx * r1, y1, lz * r1);
+            glVertex3f(cx + r * lx * r1, cy + r * y1, cz + r * lz * r1);
+        }
+        glEnd();
+    }
+}
+
+void drawDrawString(GLfloat topX, GLfloat topY, GLfloat topZ,
+                    GLfloat length, GLfloat radius, int segments, int rings, bool drawKnob) {
+    // Chain of sphere beads from topY down to topY - length.
+    setMaterial(0.85f, 0.83f, 0.78f, 10.0f);
+
+    GLfloat beadRadius = radius;
+    GLfloat spacing = beadRadius * 2.2f;  // Slight gap between beads
+    int beadCount = (int)(length / spacing);
+    if (beadCount < 1) beadCount = 1;
+
+    for (int i = 0; i < beadCount; i++) {
+        GLfloat y = topY - i * spacing;
+        drawSphere(topX, y, topZ, beadRadius, segments, segments);
+    }
+
+    // Larger end knob at the bottom
+    GLfloat knobY = topY - length;
+    GLfloat knobRadius = beadRadius * 2.5f;
+    if (drawKnob) {
+        drawSphere(topX, knobY, topZ, knobRadius, segments, segments);
+    }
 }
 
 void drawElectricalOutlet(GLfloat centerX, GLfloat centerY, GLfloat wallFrontZ) {
@@ -695,7 +749,7 @@ void drawScene()
                     frameWidth, frameHeight, frameDepth,
                     frameBorderThickness, frameDividerThickness);
 
-    GLfloat glassAlpha = 0.225f;
+    GLfloat glassAlpha = 0.5f;
     GLfloat glassForwardOffset = 0.02f;
     drawWindowTextureOverlay(leftFrameX, leftFrameY, frameFrontFaceZ,
                              frameWidth, frameHeight, frameDepth,
@@ -737,6 +791,45 @@ void drawScene()
         setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
         drawCube(1.0f);
     glPopMatrix();
+
+    // ******** Draw String (blinds pull cord) ******** //
+
+    //right-most string
+    GLfloat stringX = curtainLeftX - 0.08f; // Position the string to the left of the right curtain
+    GLfloat stringTopY = frameHeight;
+    GLfloat stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
+    GLfloat stringLength = 11.5f;
+    GLfloat stringRadius = 0.03f;
+    drawDrawString(stringX, stringTopY, stringZ,
+                   stringLength, stringRadius, 8, 12, true);
+    
+    
+    // left string
+    stringX = curtainLeftX - 0.23f; // Position the string to the left of the right curtain
+    stringTopY = frameHeight;
+    stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
+    stringLength = 12.0f;
+    stringRadius = 0.03f;
+    drawDrawString(stringX, stringTopY, stringZ,
+                   stringLength, stringRadius, 8, 12, true);
+
+    // bottom left string with knob
+    stringX = curtainLeftX - 0.23f; // Position the string to the left of the right curtain
+    stringTopY = frameHeight - 12.0f;
+    stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
+    stringLength = 1.0f;
+    stringRadius = 0.03f;
+    drawDrawString(stringX, stringTopY, stringZ,
+                   stringLength, stringRadius, 8, 12, true);
+
+    // draw hanging string no knob
+    stringX = curtainLeftX - 0.23f; // Position the string to the left of the right curtain
+    stringTopY = frameHeight - 13.0f;
+    stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
+    stringLength = 1.0f;
+    stringRadius = 0.03f;
+    drawDrawString(stringX, stringTopY, stringZ,
+                   stringLength, stringRadius, 8, 12, false);
 
     // Map both curtain planes into one shared V range so the texture continues downward.
     GLfloat mainCurtainTopY = curtainCenterY + frameHeight * 0.5f;

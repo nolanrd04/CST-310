@@ -46,33 +46,13 @@ sudo pacman -S base-devel freeglut mesa glu soil
 
 ### Simple Compilation
 ```bash
-g++ -o example RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
+g++ -o rlrender RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
 ```
-
-### With Debugging Symbols
-```bash
-g++ -g -o example RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
-```
-
-### With Optimizations (for release)
-```bash
-g++ -O2 -o example RLRender.cpp -lGL -lGLU -lglut -lSOIL -lm
-```
-
-### Explanation of Flags
-| Flag | Purpose |
-|------|---------|
-| `-o example` | Name the output executable "example" |
-| `-lGL` | Link OpenGL library |
-| `-lGLU` | Link OpenGL Utility library (provides gluLookAt, gluPerspective, etc.) |
-| `-lglut` | Link GLUT library (window management, input handling) |
-| `-lSOIL` | Link SOIL library (texture/image loading) |
-| `-lm` | Link math library (for sin, cos, etc.) |
 
 ## Running the Program
 
 ```bash
-./example
+./rlrender
 ```
 
 ## Code Structure Overview
@@ -164,38 +144,3 @@ Normals are perpendicular vectors that tell OpenGL which way a surface faces. Th
 glNormal3f(0.0f, 1.0f, 0.0f);  // This face points UP
 glVertex3f(...);                // Vertices for this face
 ```
-
-## Common Issues and Solutions
-
-### Program won't compile - missing headers
-Make sure freeglut is installed (see Prerequisites section).
-
-### Black screen / no objects visible
-- Check that `GL_DEPTH_TEST` is enabled
-- Verify objects are within the camera's view frustum
-- Make sure lighting is enabled and a light source exists
-
-### Objects look flat (no shading)
-- Enable lighting: `glEnable(GL_LIGHTING)`
-- Enable at least one light: `glEnable(GL_LIGHT0)`
-- Make sure normals are defined for your geometry
-
-### Window appears but is white/blank
-- Check that `glutSwapBuffers()` is called at the end of display()
-- Verify `GLUT_DOUBLE` is in the display mode
-
-## Extending This Example
-
-Ideas for practice:
-1. Add more objects to create a scene
-2. Implement mouse look (use `glutMotionFunc`)
-3. Add textures to objects
-4. Create animation with `glutIdleFunc`
-5. Add a second light source with different color
-6. Draw your real-life scene using these primitives
-
-## Further Reading
-
-- OpenGL Red Book (official guide): https://www.opengl.org/documentation/red_book/
-- GLUT documentation: https://www.opengl.org/resources/libraries/glut/
-- NeHe OpenGL tutorials: https://nehe.gamedev.net/
