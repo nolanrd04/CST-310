@@ -798,10 +798,19 @@ void drawScene()
     GLfloat stringX = curtainLeftX - 0.08f; // Position the string to the left of the right curtain
     GLfloat stringTopY = frameHeight;
     GLfloat stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
-    GLfloat stringLength = 11.5f;
+    GLfloat stringLength = 11.25f;
     GLfloat stringRadius = 0.03f;
     drawDrawString(stringX, stringTopY, stringZ,
                    stringLength, stringRadius, 8, 12, true);
+
+    // right string with no knob
+    stringX = curtainLeftX - 0.08f;
+    stringTopY = frameHeight - 11.25f;
+    stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
+    stringLength = 1.25f;
+    stringRadius = 0.03f;
+    drawDrawString(stringX, stringTopY, stringZ,
+                   stringLength, stringRadius, 8, 12, false);
     
     
     // left string
