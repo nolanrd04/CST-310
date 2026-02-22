@@ -38,7 +38,7 @@
 
 
 GLfloat cameraX = -1.0f;
-GLfloat cameraY = 3.25f;
+GLfloat cameraY = 3.75f;
 GLfloat cameraZ = 15.95f;
 
 GLfloat cameraAngleX = 0.0f;  // Pitch (up/down rotation)
@@ -48,6 +48,7 @@ const GLfloat MOVE_SPEED = 0.5f;    // Units per key press
 const GLfloat ROTATE_SPEED = 2.0f;  // Degrees per key press
 
 GLuint windowTexture;
+GLuint carpetTexture;
 int windowWidth = 800;
 int windowHeight = 600;
 
@@ -290,7 +291,10 @@ void drawCube(GLfloat size) {
 void drawWindowFrame(GLfloat centerX, GLfloat centerY, GLfloat frontFaceZ,
                      GLfloat frameWidth, GLfloat frameHeight,
                      GLfloat frameDepth, GLfloat borderThickness,
-                     GLfloat dividerThickness) {
+                     GLfloat dividerThickness,
+                     bool includeMiddleSection = true,
+                     bool drawLeftBorder = true,
+                     bool drawRightBorder = true) {
     GLfloat halfW = frameWidth * 0.5f;
     GLfloat halfH = frameHeight * 0.5f;
     GLfloat centerZ = frontFaceZ + frameDepth * 0.5f;
@@ -303,19 +307,23 @@ void drawWindowFrame(GLfloat centerX, GLfloat centerY, GLfloat frontFaceZ,
     // Frame color similar to the metal/aluminum look in your reference image.
     setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
 
-    // Left vertical bar
-    glPushMatrix();
-        glTranslatef(centerX - halfW + borderThickness * 0.5f, centerY, centerZ);
-        glScalef(borderThickness, frameHeight, frameDepth);
-        drawCube(1.0f);
-    glPopMatrix();
+    if (drawLeftBorder) {
+        // Left vertical bar
+        glPushMatrix();
+            glTranslatef(centerX - halfW + borderThickness * 0.5f, centerY, centerZ);
+            glScalef(borderThickness, frameHeight, frameDepth);
+            drawCube(1.0f);
+        glPopMatrix();
+    }
 
-    // Right vertical bar
-    glPushMatrix();
-        glTranslatef(centerX + halfW - borderThickness * 0.5f, centerY, centerZ);
-        glScalef(borderThickness, frameHeight, frameDepth);
-        drawCube(1.0f);
-    glPopMatrix();
+    if (drawRightBorder) {
+        // Right vertical bar
+        glPushMatrix();
+            glTranslatef(centerX + halfW - borderThickness * 0.5f, centerY, centerZ);
+            glScalef(borderThickness, frameHeight, frameDepth);
+            drawCube(1.0f);
+        glPopMatrix();
+    }
 
     // Top horizontal bar
     glPushMatrix();
@@ -331,12 +339,14 @@ void drawWindowFrame(GLfloat centerX, GLfloat centerY, GLfloat frontFaceZ,
         drawCube(1.0f);
     glPopMatrix();
 
-    // Center divider (gives the two-panel frame look)
-    glPushMatrix();
-        glTranslatef(centerX, centerY, centerZ);
-        glScalef(dividerThickness, innerHeight, frameDepth);
-        drawCube(1.0f);
-    glPopMatrix();
+    if (includeMiddleSection) {
+        // Center divider (gives the two-panel frame look)
+        glPushMatrix();
+            glTranslatef(centerX, centerY, centerZ);
+            glScalef(dividerThickness, innerHeight, frameDepth);
+            drawCube(1.0f);
+        glPopMatrix();
+    }
 }
 
 void drawWindowTextureOverlay(GLfloat centerX, GLfloat centerY, GLfloat frontFaceZ,
@@ -382,6 +392,91 @@ void drawWindowTextureOverlay(GLfloat centerX, GLfloat centerY, GLfloat frontFac
     glDepthMask(GL_TRUE);
     glBindTexture(GL_TEXTURE_2D, 0);
     glPopAttrib();
+}
+
+void drawCurtainSegment(GLfloat leftX, GLfloat width,
+                        GLfloat topY, GLfloat height,
+                        GLfloat centerZ, GLfloat depth,
+                        GLfloat bottomBandHeight,
+                        GLfloat minBandBottomY,
+                        GLfloat bandBottomY,
+                        GLfloat overlayAlpha,
+                        GLfloat overlayForwardOffset) {
+    if (width <= 0.001f || height <= 0.001f) {
+        return;
+    }
+
+    GLfloat centerX = leftX + width * 0.5f;
+    GLfloat centerY = topY - height * 0.5f; // Top-aligned curtains: varying heights drop downward.
+
+    // Main curtain panel in dark gray, slightly darker than the frame metal color.
+    glPushMatrix();
+        glTranslatef(centerX, centerY, centerZ);
+        glScalef(width, height, depth);
+        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    GLfloat bandHeight = bottomBandHeight;
+    if (bandHeight > height) {
+        bandHeight = height;
+    }
+    if (bandHeight < 0.001f) {
+        bandHeight = 0.001f;
+    }
+
+    // Left-side bands can vary slightly, but never below the frame-bottom baseline.
+    GLfloat clampedBandBottomY = bandBottomY;
+    if (clampedBandBottomY < minBandBottomY) {
+        clampedBandBottomY = minBandBottomY;
+    }
+    // This intentionally leaves a gap between the main curtain and the lower band.
+    GLfloat bandCenterY = clampedBandBottomY + bandHeight * 0.5f;
+    glPushMatrix();
+        glTranslatef(centerX, bandCenterY, centerZ + 0.01f);
+        glScalef(width, bandHeight, depth);
+        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Map both curtain planes into one shared V range so the texture continues downward.
+    GLfloat mainTopY = centerY + height * 0.5f;
+    GLfloat mainBottomY = centerY - height * 0.5f;
+    GLfloat bandTopY = bandCenterY + bandHeight * 0.5f;
+    GLfloat bandBottomEdgeY = bandCenterY - bandHeight * 0.5f;
+    GLfloat combinedOverlayHeight = mainTopY - bandBottomEdgeY;
+    if (combinedOverlayHeight < 0.001f) {
+        combinedOverlayHeight = 0.001f;
+    }
+
+    GLfloat mainTexVTop = 0.0f;
+    GLfloat mainTexVBottom = (mainTopY - mainBottomY) / combinedOverlayHeight;
+    GLfloat bandTexVTop = (mainTopY - bandTopY) / combinedOverlayHeight;
+    GLfloat bandTexVBottom = 1.0f;
+
+    drawWindowTextureOverlay(centerX, centerY,
+                             centerZ - depth * 0.5f,
+                             width, height, depth,
+                             overlayAlpha, overlayForwardOffset,
+                             mainTexVTop, mainTexVBottom);
+    drawWindowTextureOverlay(centerX, bandCenterY,
+                             (centerZ + 0.01f) - depth * 0.5f,
+                             width, bandHeight, depth,
+                             overlayAlpha, overlayForwardOffset,
+                             bandTexVTop, bandTexVBottom);
+
+    // Bridge the texture through the vertical gap so the pattern is continuous.
+    GLfloat gapTopY = mainBottomY;
+    GLfloat gapBottomY = bandTopY;
+    GLfloat gapHeight = gapTopY - gapBottomY;
+    if (gapHeight > 0.001f) {
+        GLfloat gapCenterY = (gapTopY + gapBottomY) * 0.5f;
+        drawWindowTextureOverlay(centerX, gapCenterY,
+                                 (centerZ + 0.005f) - depth * 0.5f,
+                                 width, gapHeight, depth,
+                                 overlayAlpha, overlayForwardOffset,
+                                 mainTexVBottom, bandTexVTop);
+    }
 }
 
 void drawSphere(GLfloat cx, GLfloat cy, GLfloat cz,
@@ -734,7 +829,7 @@ void drawScene()
                 -2.7f, -4.6f, 0.08f, 0.08f, 2.0f, 2.3,
                 row5Styles, 7);
 
-    // ******** Two Window Frames ******** //
+    // ******** Window Frame Row ******** //
     GLfloat frameWidth = 15.4f;
     GLfloat frameHeight = 14.0f;
     GLfloat frameDepth = 0.12f;
@@ -743,68 +838,152 @@ void drawScene()
 
     GLfloat frameFrontFaceZ = -6.0f;
     GLfloat horizontalShift = -0.5f; // Shift frame, curtain, and wall together.
-    GLfloat leftFrameX = -2.25f + horizontalShift;  // CHANGE FRAME POSITION: move left/right for left frame
-    GLfloat leftFrameY = 6.5f;   // CHANGE FRAME POSITION: move up/down for left frame
-    drawWindowFrame(leftFrameX, leftFrameY, frameFrontFaceZ,
-                    frameWidth, frameHeight, frameDepth,
-                    frameBorderThickness, frameDividerThickness);
+    GLfloat originalFrameCenterX = -2.25f + horizontalShift;
+    GLfloat frameCenterY = 6.5f;
+
+    // Left->right frame sequence: three standard frames on the left of original,
+    // one standard on the right, and the far-right half-width frame (no middle).
+    GLfloat frameWidths[] = {
+        frameWidth, frameWidth, frameWidth, frameWidth, frameWidth, frameWidth * 0.5f
+    };
+    bool frameHasMiddle[] = { true, true, true, true, true, false };
+    const int frameCount = static_cast<int>(sizeof(frameWidths) / sizeof(frameWidths[0]));
+    const int originalFrameIndex = 3;
+
+    GLfloat frameLeftEdges[6];
+    GLfloat frameRightEdges[6];
+    GLfloat frameCenters[6];
+
+    // Keep the original frame fixed, then place neighbors with shared-edge math:
+    // leftX[i+1] = leftX[i] + width[i] (no spacing between adjacent frames).
+    frameLeftEdges[originalFrameIndex] = originalFrameCenterX - frameWidths[originalFrameIndex] * 0.5f;
+    frameCenters[originalFrameIndex] = originalFrameCenterX;
+
+    for (int i = originalFrameIndex - 1; i >= 0; --i) {
+        frameLeftEdges[i] = frameLeftEdges[i + 1] - frameWidths[i];
+        frameCenters[i] = frameLeftEdges[i] + frameWidths[i] * 0.5f;
+    }
+    for (int i = originalFrameIndex + 1; i < frameCount; ++i) {
+        frameLeftEdges[i] = frameLeftEdges[i - 1] + frameWidths[i - 1];
+        frameCenters[i] = frameLeftEdges[i] + frameWidths[i] * 0.5f;
+    }
+    for (int i = 0; i < frameCount; ++i) {
+        frameRightEdges[i] = frameLeftEdges[i] + frameWidths[i];
+    }
+
+    GLfloat frameRowLeftEdgeX = frameLeftEdges[0];
+    GLfloat frameRowRightEdgeX = frameRightEdges[frameCount - 1];
+    GLfloat frameRowWidth = frameRowRightEdgeX - frameRowLeftEdgeX; // 5.5 * standard width
 
     GLfloat glassAlpha = 0.5f;
     GLfloat glassForwardOffset = 0.02f;
-    drawWindowTextureOverlay(leftFrameX, leftFrameY, frameFrontFaceZ,
-                             frameWidth, frameHeight, frameDepth,
-                             glassAlpha, glassForwardOffset);
+    for (int i = 0; i < frameCount; ++i) {
+        // Seam de-duplication (Option B): shared boundaries are emitted once via right borders.
+        bool drawLeftBorder = (i == 0);
+        bool drawRightBorder = true;
 
-    // ******** Right Curtain Planes ******** //
-    // Keep curtain aligned with frame height/depth but offset right so it does not block the frame.
-    GLfloat frameRightEdgeX = leftFrameX + frameWidth * 0.5f - 0.25f;
-    GLfloat curtainGap = 0.50f;
-    GLfloat curtainDepth = 0.03f;
-    GLfloat curtainRightExtension = 1.1f; // Make the right curtain a little longer to the right.
-    GLfloat curtainCenterY = leftFrameY + 1.0f;
-    GLfloat curtainCenterZ = frameFrontFaceZ + frameDepth * 0.5f + 0.05f;
-    GLfloat curtainLeftX = frameRightEdgeX + curtainGap;
-    GLfloat curtainRightX = curtainCenterZ + 12.0f + horizontalShift + curtainRightExtension;
-    if (curtainRightX < curtainLeftX + 0.5f) {
-        curtainRightX = curtainLeftX + 0.5f;
+        // The far-right frame is half-width and omits the middle divider.
+        drawWindowFrame(frameCenters[i], frameCenterY, frameFrontFaceZ,
+                        frameWidths[i], frameHeight, frameDepth,
+                        frameBorderThickness, frameDividerThickness,
+                        frameHasMiddle[i],
+                        drawLeftBorder, drawRightBorder);
+        drawWindowTextureOverlay(frameCenters[i], frameCenterY, frameFrontFaceZ,
+                                 frameWidths[i], frameHeight, frameDepth,
+                                 glassAlpha, glassForwardOffset);
     }
-    GLfloat curtainWidth = curtainRightX - curtainLeftX;
-    GLfloat curtainCenterX = (curtainLeftX + curtainRightX) * 0.5f;
 
-    // Main curtain panel in dark gray, slightly darker than the frame metal color.
-    glPushMatrix();
-        glTranslatef(curtainCenterX, curtainCenterY, curtainCenterZ);
-        glScalef(curtainWidth, frameHeight, curtainDepth);
-        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
-        drawCube(1.0f);
-    glPopMatrix();
+    // ******** Curtain Segments ******** //
+    // No curtain is placed on the camera-facing middle frame (originalFrameIndex).
+    const int leftNearCurtainFrameIndex = originalFrameIndex - 1;
+    const int leftMidCurtainFrameIndex = originalFrameIndex - 2;
+    const int leftFarCurtainFrameIndex = originalFrameIndex - 3;
+    const int rightMainCurtainFrameIndex = frameCount - 2;
+    const int rightFarCurtainFrameIndex = frameCount - 1;
 
+    GLfloat leftNearCurtainWidth = frameWidths[leftNearCurtainFrameIndex];
+    GLfloat leftMidCurtainWidth = frameWidths[leftMidCurtainFrameIndex];
+    GLfloat leftFarCurtainWidth = frameWidths[leftFarCurtainFrameIndex];
+    GLfloat rightMainCurtainWidth = frameWidths[rightMainCurtainFrameIndex];
+    GLfloat rightFarCurtainWidth = frameWidths[rightFarCurtainFrameIndex];
+
+    GLfloat curtainDepth = 0.03f;
+    GLfloat curtainCenterZ = frameFrontFaceZ + frameDepth * 0.5f + 0.05f;
     GLfloat curtainOverlayAlpha = 0.1f;
     GLfloat curtainOverlayForwardOffset = 0.015f;
+    GLfloat baseBottomBandHeight = 0.38f;
+    GLfloat frameTopY = frameCenterY + frameHeight * 0.5f;
+    GLfloat curtainTopY = frameTopY;
+    GLfloat frameBottomY = frameCenterY - frameHeight * 0.5f;
+    // Keep curtains no higher than frame top; trim heights so they do not shift downward.
+    GLfloat curtainHeightTrim = 1.0f;
+    GLfloat rightMainCurtainHeight = frameHeight - curtainHeightTrim;
+    GLfloat rightFarCurtainHeight = (frameHeight * 0.85f) - curtainHeightTrim;
+    GLfloat leftNearCurtainHeight = (frameHeight * 0.45f) - curtainHeightTrim;
+    GLfloat leftMidCurtainHeight = (frameHeight * 0.60f) - curtainHeightTrim;
+    GLfloat leftFarCurtainHeight = (frameHeight * 0.52f) - curtainHeightTrim;
 
-    // Bottom curtain band (matches the lower section visible in the reference image).
-    GLfloat curtainBottomBandHeight = 0.38f;
-    GLfloat curtainBottomBandCenterY = leftFrameY - frameHeight * 0.5f + curtainBottomBandHeight * 0.5f;
-    glPushMatrix();
-        glTranslatef(curtainCenterX, curtainBottomBandCenterY, curtainCenterZ + 0.01f);
-        glScalef(curtainWidth, curtainBottomBandHeight, curtainDepth);
-        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 30.0f);
-        drawCube(1.0f);
-    glPopMatrix();
+    GLfloat leftNearBottomBandHeight = baseBottomBandHeight;
+    GLfloat leftMidBottomBandHeight = baseBottomBandHeight * 0.92f;
+    GLfloat leftFarBottomBandHeight = baseBottomBandHeight * 1.08f;
+    GLfloat rightMainBottomBandHeight = baseBottomBandHeight;
+    GLfloat rightFarBottomBandHeight = baseBottomBandHeight;
+
+    // Left-side bottom bands vary slightly upward, never below frameBottomY.
+    GLfloat leftNearBandBottomY = frameBottomY + 2.02f;
+    GLfloat leftMidBandBottomY = frameBottomY;
+    GLfloat leftFarBandBottomY = frameBottomY + 1.14f;
+    GLfloat rightMainBandBottomY = frameBottomY;
+    GLfloat rightFarBandBottomY = frameBottomY;
+
+    GLfloat leftNearCurtainLeftX = frameLeftEdges[leftNearCurtainFrameIndex];
+    GLfloat leftMidCurtainLeftX = frameLeftEdges[leftMidCurtainFrameIndex];
+    GLfloat leftFarCurtainLeftX = frameLeftEdges[leftFarCurtainFrameIndex];
+    GLfloat rightMainCurtainLeftX = frameLeftEdges[rightMainCurtainFrameIndex];
+    GLfloat rightFarCurtainLeftX = frameLeftEdges[rightFarCurtainFrameIndex];
+
+    // Each curtain spans exactly the width of the frame it covers, with varied heights.
+    drawCurtainSegment(leftFarCurtainLeftX, leftFarCurtainWidth,
+                       curtainTopY, leftFarCurtainHeight,
+                       curtainCenterZ, curtainDepth,
+                       leftFarBottomBandHeight, frameBottomY, leftFarBandBottomY,
+                       curtainOverlayAlpha, curtainOverlayForwardOffset);
+    drawCurtainSegment(leftMidCurtainLeftX, leftMidCurtainWidth,
+                       curtainTopY, leftMidCurtainHeight,
+                       curtainCenterZ, curtainDepth,
+                       leftMidBottomBandHeight, frameBottomY, leftMidBandBottomY,
+                       curtainOverlayAlpha, curtainOverlayForwardOffset);
+    drawCurtainSegment(leftNearCurtainLeftX, leftNearCurtainWidth,
+                       curtainTopY, leftNearCurtainHeight,
+                       curtainCenterZ, curtainDepth,
+                       leftNearBottomBandHeight, frameBottomY, leftNearBandBottomY,
+                       curtainOverlayAlpha, curtainOverlayForwardOffset);
+    drawCurtainSegment(rightMainCurtainLeftX, rightMainCurtainWidth,
+                       curtainTopY, rightMainCurtainHeight,
+                       curtainCenterZ, curtainDepth,
+                       rightMainBottomBandHeight, frameBottomY, rightMainBandBottomY,
+                       curtainOverlayAlpha, curtainOverlayForwardOffset);
+    drawCurtainSegment(rightFarCurtainLeftX, rightFarCurtainWidth,
+                       curtainTopY, rightFarCurtainHeight,
+                       curtainCenterZ, curtainDepth,
+                       rightFarBottomBandHeight, frameBottomY, rightFarBandBottomY,
+                       curtainOverlayAlpha, curtainOverlayForwardOffset);
 
     // ******** Draw String (blinds pull cord) ******** //
 
-    //right-most string
-    GLfloat stringX = curtainLeftX - 0.08f; // Position the string to the left of the right curtain
-    GLfloat stringTopY = frameHeight;
+    // Keep pull cords with the right main curtain segment.
+    GLfloat stringX = rightMainCurtainLeftX - 0.08f;
+    GLfloat chainTopY = frameTopY;
+    GLfloat chainLengthTrim = frameHeight - frameTopY; // Trim amount to keep chain bottoms from dropping.
+    GLfloat stringTopY = chainTopY;
     GLfloat stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
-    GLfloat stringLength = 11.25f;
+    GLfloat stringLength = 11.25f - chainLengthTrim;
     GLfloat stringRadius = 0.03f;
     drawDrawString(stringX, stringTopY, stringZ,
                    stringLength, stringRadius, 8, 12, true);
 
     // right string with no knob
-    stringX = curtainLeftX - 0.08f;
+    stringX = rightMainCurtainLeftX - 0.08f;
     stringTopY = frameHeight - 11.25f;
     stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
     stringLength = 1.25f;
@@ -813,17 +992,15 @@ void drawScene()
                    stringLength, stringRadius, 8, 12, false);
     
     
-    // left string
-    stringX = curtainLeftX - 0.23f; // Position the string to the left of the right curtain
-    stringTopY = frameHeight;
+    stringX = rightMainCurtainLeftX - 0.23f;
+    stringTopY = chainTopY;
     stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
-    stringLength = 12.0f;
+    stringLength = 12.0f - chainLengthTrim;
     stringRadius = 0.03f;
     drawDrawString(stringX, stringTopY, stringZ,
                    stringLength, stringRadius, 8, 12, true);
 
-    // bottom left string with knob
-    stringX = curtainLeftX - 0.23f; // Position the string to the left of the right curtain
+    stringX = rightMainCurtainLeftX - 0.23f;
     stringTopY = frameHeight - 12.0f;
     stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
     stringLength = 1.0f;
@@ -831,8 +1008,7 @@ void drawScene()
     drawDrawString(stringX, stringTopY, stringZ,
                    stringLength, stringRadius, 8, 12, true);
 
-    // draw hanging string no knob
-    stringX = curtainLeftX - 0.23f; // Position the string to the left of the right curtain
+    stringX = rightMainCurtainLeftX - 0.23f;
     stringTopY = frameHeight - 13.0f;
     stringZ = frameFrontFaceZ + frameDepth + 0.05f;  // Just in front of the glass
     stringLength = 1.0f;
@@ -840,54 +1016,15 @@ void drawScene()
     drawDrawString(stringX, stringTopY, stringZ,
                    stringLength, stringRadius, 8, 12, false);
 
-    // Map both curtain planes into one shared V range so the texture continues downward.
-    GLfloat mainCurtainTopY = curtainCenterY + frameHeight * 0.5f;
-    GLfloat mainCurtainBottomY = curtainCenterY - frameHeight * 0.5f;
-    GLfloat bottomBandTopY = curtainBottomBandCenterY + curtainBottomBandHeight * 0.5f;
-    GLfloat bottomBandBottomY = curtainBottomBandCenterY - curtainBottomBandHeight * 0.5f;
-    GLfloat combinedOverlayHeight = mainCurtainTopY - bottomBandBottomY;
-    if (combinedOverlayHeight < 0.001f) {
-        combinedOverlayHeight = 0.001f;
-    }
-
-    GLfloat mainTexVTop = 0.0f;
-    GLfloat mainTexVBottom = (mainCurtainTopY - mainCurtainBottomY) / combinedOverlayHeight;
-    GLfloat bandTexVTop = (mainCurtainTopY - bottomBandTopY) / combinedOverlayHeight;
-    GLfloat bandTexVBottom = 1.0f;
-
-    drawWindowTextureOverlay(curtainCenterX, curtainCenterY,
-                             curtainCenterZ - curtainDepth * 0.5f,
-                             curtainWidth, frameHeight, curtainDepth,
-                             curtainOverlayAlpha, curtainOverlayForwardOffset,
-                             mainTexVTop, mainTexVBottom);
-    drawWindowTextureOverlay(curtainCenterX, curtainBottomBandCenterY,
-                             (curtainCenterZ + 0.01f) - curtainDepth * 0.5f,
-                             curtainWidth, curtainBottomBandHeight, curtainDepth,
-                             curtainOverlayAlpha, curtainOverlayForwardOffset,
-                             bandTexVTop, bandTexVBottom);
-
-    // Bridge the texture through the vertical gap so the pattern is continuous.
-    GLfloat gapTopY = mainCurtainBottomY;
-    GLfloat gapBottomY = bottomBandTopY;
-    GLfloat gapHeight = gapTopY - gapBottomY;
-    if (gapHeight > 0.001f) {
-        GLfloat gapCenterY = (gapTopY + gapBottomY) * 0.5f;
-        drawWindowTextureOverlay(curtainCenterX, gapCenterY,
-                                 (curtainCenterZ + 0.005f) - curtainDepth * 0.5f,
-                                 curtainWidth, gapHeight, curtainDepth,
-                                 curtainOverlayAlpha, curtainOverlayForwardOffset,
-                                 mainTexVBottom, bandTexVTop);
-    }
-
     // Bottom wall section under the frame (same thickness/depth as frame).
-    GLfloat wallSectionTopY = leftFrameY - frameHeight * 0.5f;
+    GLfloat wallSectionTopY = frameCenterY - frameHeight * 0.5f;
     GLfloat wallSectionBottomY = by - buildingH - 3.0f;
     GLfloat wallSectionHeight = wallSectionTopY - wallSectionBottomY;
 
-    // CHANGE WALL WIDTH: adjust these two values to span the full projection window bottom.
-    GLfloat wallSectionLeftX = bx - buildingW + 0.25f + horizontalShift;
-    GLfloat wallSectionRightX = bx + buildingW - 0.25f + horizontalShift;
-    GLfloat wallSectionWidth = wallSectionRightX - wallSectionLeftX;
+    // Match the wall segment to the exact frame-row span (shared-edge layout).
+    GLfloat wallSectionLeftX = frameRowLeftEdgeX;
+    GLfloat wallSectionRightX = frameRowRightEdgeX;
+    GLfloat wallSectionWidth = frameRowWidth;
     GLfloat wallSectionCenterX = (wallSectionLeftX + wallSectionRightX) * 0.5f;
 
     GLfloat wallSectionCenterY = wallSectionBottomY + wallSectionHeight * 0.5f;
@@ -900,9 +1037,120 @@ void drawScene()
         drawCube(1.0f);
     glPopMatrix();
 
+    // Rubber baseboard at the bottom of the lower wall: curtain color, full wall width,
+    // and slightly protruding forward from the wall face.
+    GLfloat baseboardHeight = 0.70f;
+    GLfloat baseboardProtrude = 0.03f;
+    GLfloat baseboardDepth = frameDepth + baseboardProtrude;
+    GLfloat baseboardCenterY = wallSectionBottomY + baseboardHeight * 0.5f;
+    GLfloat baseboardCenterZ = wallSectionCenterZ + baseboardProtrude * 0.5f;
+
+    glPushMatrix();
+        glTranslatef(wallSectionCenterX, baseboardCenterY, baseboardCenterZ);
+        glScalef(wallSectionWidth, baseboardHeight, baseboardDepth);
+        setMaterial(90.0f/255.0f, 94.0f/255.0f, 98.0f/255.0f, 20.0f);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Surrounding shell: two side walls, one back wall, floor, and ceiling.
+    // Side-wall span uses half the lower wall width; back wall uses full lower wall width.
+    GLfloat shellColorR = 225.0f / 255.0f;
+    GLfloat shellColorG = 184.0f / 255.0f;
+    GLfloat shellColorB = 142.0f / 255.0f;
+    GLfloat shellThickness = frameDepth;
+    // Double the previous room depth so the shell extends farther back.
+    GLfloat sideWallSpan = wallSectionWidth;
+    GLfloat backWallWidth = wallSectionWidth;
+    GLfloat shellBottomY = wallSectionBottomY;
+    GLfloat shellTopY = wallSectionTopY + frameHeight; // Lower wall + frame height.
+    GLfloat shellHeight = shellTopY - shellBottomY;
+    GLfloat shellCenterY = shellBottomY + shellHeight * 0.5f;
+
+    setMaterial(shellColorR, shellColorG, shellColorB);
+
+    // Left side wall
+    glPushMatrix();
+        glTranslatef(wallSectionLeftX + shellThickness * 0.5f,
+                     shellCenterY,
+                     wallSectionCenterZ + sideWallSpan * 0.5f);
+        glScalef(shellThickness, shellHeight, sideWallSpan);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Right side wall
+    glPushMatrix();
+        glTranslatef(wallSectionRightX - shellThickness * 0.5f,
+                     shellCenterY,
+                     wallSectionCenterZ + sideWallSpan * 0.5f);
+        glScalef(shellThickness, shellHeight, sideWallSpan);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Back wall
+    glPushMatrix();
+        glTranslatef(wallSectionCenterX,
+                     shellCenterY,
+                     wallSectionCenterZ + sideWallSpan);
+        glScalef(backWallWidth, shellHeight, shellThickness);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Floor
+    glPushMatrix();
+        glTranslatef(wallSectionCenterX,
+                     shellBottomY + shellThickness * 0.5f,
+                     wallSectionCenterZ + sideWallSpan * 0.5f);
+        glScalef(backWallWidth, shellThickness, sideWallSpan);
+        drawCube(1.0f);
+    glPopMatrix();
+
+    // Carpet texture on the floor top, tiled so it repeats instead of stretching.
+    if (carpetTexture != 0) {
+        GLfloat floorTopY = shellBottomY + shellThickness + 0.002f;
+        GLfloat floorLeftX = wallSectionCenterX - backWallWidth * 0.5f;
+        GLfloat floorRightX = wallSectionCenterX + backWallWidth * 0.5f;
+        GLfloat floorNearZ = wallSectionCenterZ;
+        GLfloat floorFarZ = wallSectionCenterZ + sideWallSpan;
+
+        GLfloat carpetTileWorldSize = 1.2f;
+        GLfloat tileU = backWallWidth / carpetTileWorldSize;
+        GLfloat tileV = sideWallSpan / carpetTileWorldSize;
+
+        glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, carpetTexture);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        setMaterial(0.68f, 0.68f, 0.68f, 8.0f);
+        glColor3f(1.0f, 1.0f, 1.0f);
+
+        glBegin(GL_QUADS);
+            glNormal3f(0.0f, 1.0f, 0.0f);
+            glTexCoord2f(0.0f, 0.0f);  glVertex3f(floorLeftX,  floorTopY, floorNearZ);
+            glTexCoord2f(tileU, 0.0f); glVertex3f(floorRightX, floorTopY, floorNearZ);
+            glTexCoord2f(tileU, tileV);glVertex3f(floorRightX, floorTopY, floorFarZ);
+            glTexCoord2f(0.0f, tileV); glVertex3f(floorLeftX,  floorTopY, floorFarZ);
+        glEnd();
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glPopAttrib();
+    }
+
+    // Ceiling
+    glPushMatrix();
+        glTranslatef(wallSectionCenterX,
+                     shellTopY - shellThickness * 0.5f,
+                     wallSectionCenterZ + sideWallSpan * 0.5f);
+        glScalef(backWallWidth, shellThickness, sideWallSpan);
+        drawCube(1.0f);
+    glPopMatrix();
+
     // Wall outlet positioned low on the wall like the reference image.
     GLfloat wallFrontZ = wallSectionCenterZ + frameDepth * 0.5f;
-    GLfloat outletX = wallSectionCenterX + wallSectionWidth * 0.15f;
+    // Place socket so its outer-left edge is right of the midpoint of the center frame's right half.
+    GLfloat outletPlateWidth = 0.85f; // Matches drawElectricalOutlet() outer plate width.
+    GLfloat centerFrameRightHalfMidX = originalFrameCenterX + frameWidths[originalFrameIndex] * 0.25f;
+    GLfloat outletLeftEdgeX = centerFrameRightHalfMidX + 0.10f;
+    GLfloat outletX = outletLeftEdgeX + outletPlateWidth * 0.5f;
     GLfloat outletY = wallSectionBottomY + wallSectionHeight * 0.5f;
     drawElectricalOutlet(outletX, outletY, wallFrontZ);
 
@@ -1010,7 +1258,7 @@ void keyboard(unsigned char key, int x, int y)
         case 'r':
         case 'R':
             cameraX = 1.5f;
-            cameraY = 5.0f;
+            cameraY = 5.5f;
             cameraZ = 11.45f;
             cameraAngleX = 0.0f;
             cameraAngleY = 0.0f;
@@ -1066,6 +1314,39 @@ GLuint loadTexture(const char* filename) {
     return texID;
 }
 
+GLuint createCarpetTexture() {
+    const int texSize = 64;
+    unsigned char pixels[texSize * texSize * 3];
+
+    // Procedural dark carpet: non-checkered, subtle deterministic grain.
+    for (int y = 0; y < texSize; ++y) {
+        for (int x = 0; x < texSize; ++x) {
+            int idx = (y * texSize + x) * 3;
+            int grain = ((x * 37 + y * 91 + (x * y) * 11) % 17) - 8;
+            int wave = ((x * 3 + y * 5) % 9) - 4;
+            int base = 122;
+            int shade = base + grain + wave;
+            if (shade < 0) shade = 0;
+            if (shade > 255) shade = 255;
+            pixels[idx + 0] = static_cast<unsigned char>(shade);
+            pixels[idx + 1] = static_cast<unsigned char>(shade);
+            pixels[idx + 2] = static_cast<unsigned char>(shade);
+        }
+    }
+
+    GLuint texID = 0;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texSize, texSize, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return texID;
+}
+
 void init()
 {
     glEnable(GL_DEPTH_TEST); // Enable depth testing for 3D
@@ -1076,6 +1357,7 @@ void init()
     glEnable(GL_NORMALIZE); // Normalize normals for scaled objects
 
     windowTexture = loadTexture("window_texture.png");
+    carpetTexture = createCarpetTexture();
 }
 
 int main(int argc, char** argv) 
