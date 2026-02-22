@@ -168,9 +168,11 @@ void drawCameraCoordinatesOverlay() {
 void drawGroundPlane()
 {
     
-    GLfloat planeSize = 20.0f;    // Half-width of the plane (total = 40 units)
+    GLfloat planeSizeX = 30.0f;    // Half-width of the plane (total = 40 units)
+    GLfloat planeSizeZ = 30.0f;    // Half-depth of the plane (total = 40 units)
     int divisions = 20;            // Number of tiles per side
-    GLfloat step = planeSize * 2 / divisions;  // Size of each tile
+    GLfloat stepX = planeSizeX * 2 / divisions;  // Size of each tile in X
+    GLfloat stepZ = planeSizeZ * 2 / divisions;  // Size of each tile in Z
 
     // Start with dark gray material
     setMaterial(0.3f, 0.3f, 0.3f, 10.0f);
@@ -187,8 +189,8 @@ void drawGroundPlane()
     for (int i = 0; i < divisions; i++) {
         for (int j = 0; j < divisions; j++) {
             // Calculate corner position of this tile
-            GLfloat x = -planeSize + i * step;
-            GLfloat z = -planeSize + j * step;
+            GLfloat x = -planeSizeX + i * stepX;
+            GLfloat z = -planeSizeZ + j * stepZ;
 
             /**
              * Checkerboard Pattern
@@ -204,11 +206,11 @@ void drawGroundPlane()
                 setMaterial(0.2f, 0.2f, 0.2f, 10.0f);  // Dark gray
             }
 
-            // Draw tile as a quad on the Y=0 plane
-            glVertex3f(x, 0.0f, z);
-            glVertex3f(x + step, 0.0f, z);
-            glVertex3f(x + step, 0.0f, z + step);
-            glVertex3f(x, 0.0f, z + step);
+            // Draw tile as a quad on the Y= -5.5f plane
+            glVertex3f(x, -5.5f, z);
+            glVertex3f(x + stepX, -5.5f, z);
+            glVertex3f(x + stepX, -5.5f, z + stepZ);
+            glVertex3f(x, -5.5f, z + stepZ);
         }
     }
     glEnd();
@@ -622,8 +624,8 @@ void drawWindows(int rows, int cols,
 
 void drawScene()
 {
-    // Draw ground plane first (at Y = 0)
-    // drawGroundPlane();
+    // Draw ground plane first (at Y = -0.5)
+    drawGroundPlane();
 
     // ******** Building ******** //
     // Building parameters (world space)
@@ -933,6 +935,7 @@ void drawScene()
         setMaterial(65/255.0f, 65/255.0f, 65/255.0f); // Red roof
         drawCube(cubeSize);
     glPopMatrix();
+
 }
 
 void display() 
