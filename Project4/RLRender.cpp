@@ -37,9 +37,14 @@
 #include <cstdlib>      // For exit() - program termination
 
 
-GLfloat cameraX = -1.0f;
-GLfloat cameraY = 3.75f;
-GLfloat cameraZ = 15.95f;
+// GLfloat cameraX = -1.0f;
+// GLfloat cameraY = 3.75f;
+// GLfloat cameraZ = 15.95f;
+
+GLfloat cameraX = 4.0f;
+GLfloat cameraY = 1.75f;
+GLfloat cameraZ = -0.55f;
+
 
 GLfloat cameraAngleX = 0.0f;  // Pitch (up/down rotation)
 GLfloat cameraAngleY = 0.0f;  // Yaw (left/right rotation)
@@ -51,6 +56,7 @@ GLuint windowTexture;
 GLuint carpetTexture;
 int windowWidth = 800;
 int windowHeight = 600;
+bool showCoordinateSystemOverlay = true;
 
 struct Color {
     GLfloat r, g, b;
@@ -156,6 +162,79 @@ void drawCameraCoordinatesOverlay() {
 
     glColor3f(0.0f, 0.0f, 0.0f);
     drawBitmapText(coordinateText, 10.0f, static_cast<GLfloat>(windowHeight - 20));
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glPopAttrib();
+}
+
+void drawCoordinateSystemOverlay() {
+    const GLfloat axisLength = 55.0f;
+    const GLfloat margin = 16.0f;
+    const GLfloat originX = static_cast<GLfloat>(windowWidth) - margin - axisLength;
+    const GLfloat originY = static_cast<GLfloat>(windowHeight) - margin - axisLength;
+    const GLfloat zAxisLength = axisLength * 0.45f;
+    const GLfloat infoX = static_cast<GLfloat>(windowWidth) - 150.0f;
+    const GLfloat infoTopY = static_cast<GLfloat>(windowHeight) - 20.0f;
+
+    char xText[32];
+    char yText[32];
+    char zText[32];
+    std::snprintf(xText, sizeof(xText), "X: %.2f", cameraX);
+    std::snprintf(yText, sizeof(yText), "Y: %.2f", cameraY);
+    std::snprintf(zText, sizeof(zText), "Z: %.2f", cameraZ);
+
+    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LINE_BIT);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_TEXTURE_2D);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0.0, static_cast<GLdouble>(windowWidth), 0.0, static_cast<GLdouble>(windowHeight));
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+        // X axis (red)
+        glColor3f(0.95f, 0.20f, 0.20f);
+        glVertex2f(originX, originY);
+        glVertex2f(originX + axisLength, originY);
+
+        // Y axis (green)
+        glColor3f(0.20f, 0.85f, 0.20f);
+        glVertex2f(originX, originY);
+        glVertex2f(originX, originY + axisLength);
+
+        // Z axis (blue)
+        glColor3f(0.20f, 0.45f, 0.95f);
+        glVertex2f(originX, originY);
+        glVertex2f(originX - zAxisLength, originY - zAxisLength);
+    glEnd();
+
+    glColor3f(0.95f, 0.20f, 0.20f);
+    drawBitmapText("X", originX + axisLength + 6.0f, originY - 4.0f, GLUT_BITMAP_HELVETICA_12);
+
+    glColor3f(0.20f, 0.85f, 0.20f);
+    drawBitmapText("Y", originX - 4.0f, originY + axisLength + 8.0f, GLUT_BITMAP_HELVETICA_12);
+
+    glColor3f(0.20f, 0.45f, 0.95f);
+    drawBitmapText("Z", originX - zAxisLength - 12.0f, originY - zAxisLength - 4.0f, GLUT_BITMAP_HELVETICA_12);
+
+    // Numeric camera coordinates in top-right corner.
+    glColor3f(0.95f, 0.20f, 0.20f);
+    drawBitmapText(xText, infoX, infoTopY, GLUT_BITMAP_HELVETICA_12);
+    glColor3f(0.20f, 0.85f, 0.20f);
+    drawBitmapText(yText, infoX, infoTopY - 16.0f, GLUT_BITMAP_HELVETICA_12);
+    glColor3f(0.20f, 0.45f, 0.95f);
+    drawBitmapText(zText, infoX, infoTopY - 32.0f, GLUT_BITMAP_HELVETICA_12);
 
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -1146,6 +1225,9 @@ void display()
 
     setupLighting();
     drawScene();
+    if (showCoordinateSystemOverlay) {
+        drawCoordinateSystemOverlay();
+    }
     //drawCameraCoordinatesOverlay();
     glutSwapBuffers();
 }
@@ -1204,11 +1286,15 @@ void keyboard(unsigned char key, int x, int y)
         // reset position
         case 'r':
         case 'R':
-            cameraX = 1.5f;
-            cameraY = 5.5f;
-            cameraZ = 11.45f;
+            cameraX = 4.0f;
+            cameraY = 1.75f;
+            cameraZ = -0.55f;
             cameraAngleX = 0.0f;
             cameraAngleY = 0.0f;
+            break;
+        case 'c':
+        case 'C':
+            showCoordinateSystemOverlay = !showCoordinateSystemOverlay;
             break;
         case 27: // ESC key
             exit(0);
