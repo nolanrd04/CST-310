@@ -10,6 +10,9 @@
 #include <cstdio>   // stdfprintf
 #include <cstdlib>  // stdexit, EXIT_FAILURE
 #include <vector>   // stdvector for shader compile/link logs
+#include <atomic>   // std::atomic<float>, std::atomic<bool>
+#include <string>   // std::string for std::stof
+#include <thread>   // std::thread
 
 // -----------------------------------------------------------------------------
 // OpenGL Phong-style lighting demo
@@ -77,6 +80,14 @@ static bool gArrowDownDown  = false;
 
 // Timer baseline used by idle() for frame-rate-independent camera updates
 static int gPrevTimeMs = 0;
+
+// ---------------------------------------------------------------------------
+// Query cube state — shared between the background console thread and the
+// OpenGL render thread. Negative sentinel (-1.0f) means no query yet.
+// ---------------------------------------------------------------------------
+static std::atomic<float> gQueryShininess(-1.0f);
+static std::atomic<bool>  gInputThreadShouldExit(false);
+static std::thread        gInputThread;
 
 // -----------------------------------------------------------------------------
 // Shared light/material constants
@@ -574,6 +585,9 @@ static bool BuildPhongProgram() {
 }
 
 static void ShutdownPhongProgram() {
+    // Signal the input thread to stop looping (in case it is still waiting for input)
+    gInputThreadShouldExit.store(true);
+
     if (pglUseProgram) {
         pglUseProgram(0);
     }
@@ -711,6 +725,42 @@ static void DrawLabelsOverlay(const GLdouble model[16],
         }
     }
 
+    // --- Label for the query cube (only when active) ---
+    const float qs = gQueryShininess.load();
+    if (qs > 0.0f) {
+        // Same label Y anchor formula as grid cubes, using the query cube's world position
+        const float qx = 0.0f;
+        const float qy = CubeCenterY(1) - kRowSpacing - (kCubeSize * 0.80f + 0.45f);
+        const float qz = 0.0f;
+
+        GLdouble sx = 0.0, sy = 0.0, sz = 0.0;
+        gluProject(static_cast<GLdouble>(qx),
+                   static_cast<GLdouble>(qy),
+                   static_cast<GLdouble>(qz),
+                   model, proj, viewport,
+                   &sx, &sy, &sz);
+
+        // Build label string: "Query: 64" or "Query: 64.5" for non-integer values
+        char queryLabel[32];
+        if (qs == std::floor(qs)) {
+            std::snprintf(queryLabel, sizeof(queryLabel), "Query: %d",
+                          static_cast<int>(qs));
+        } else {
+            std::snprintf(queryLabel, sizeof(queryLabel), "Query: %.1f", qs);
+        }
+
+        // Use a slightly brighter color to visually distinguish the query label
+        glColor3f(1.0f, 0.85f, 0.30f); // warm yellow, distinct from the grid's gray
+
+        const int textWidth = BitmapStringWidth(const_cast<void*>(font), queryLabel);
+        const float drawX = static_cast<float>(sx) - (textWidth * 0.5f);
+        const float drawY = static_cast<float>(sy) - 8.0f;
+        DrawBitmapString2D(drawX, drawY, const_cast<void*>(font), queryLabel);
+
+        // Restore the grid label color for any future labels
+        glColor3f(0.93f, 0.93f, 0.93f);
+    }
+
     // Restore matrices and states
     glPopMatrix(); // modelview
     glMatrixMode(GL_PROJECTION);
@@ -838,6 +888,42 @@ static void display() {
         }
     }
 
+    // --- Query cube (9th cube, rendered only when a value has been submitted) ---
+    const float queryShininess = gQueryShininess.load();
+    if (queryShininess > 0.0f) {
+        const float queryCubeX = 0.0f;
+        const float queryCubeY = CubeCenterY(1) - kRowSpacing; // centered below grid
+        const float queryCubeZ = 0.0f;
+
+        // Reuse the same per-face-center specular-aligned light as the grid cubes
+        float frontNormal[3];
+        ComputeCubeFrontNormalWorld(frontNormal);
+
+        const float faceCenter[3] = {
+            queryCubeX + frontNormal[0] * (kCubeSize * 0.5f),
+            queryCubeY + frontNormal[1] * (kCubeSize * 0.5f),
+            queryCubeZ + frontNormal[2] * (kCubeSize * 0.5f)
+        };
+        float lightDir[3];
+        ComputeSpecAlignedLightDir(faceCenter, frontNormal, lightDir);
+
+        const float lightWorldX = faceCenter[0] + lightDir[0] * kPerCubeLightDistance;
+        const float lightWorldY = faceCenter[1] + lightDir[1] * kPerCubeLightDistance;
+        const float lightWorldZ = faceCenter[2] + lightDir[2] * kPerCubeLightDistance;
+        float lightEye[3];
+        TransformPointByMatrix(viewMatrix, lightWorldX, lightWorldY, lightWorldZ, lightEye);
+        pglUniform3f(gULightPosEye, lightEye[0], lightEye[1], lightEye[2]);
+        pglUniform1f(gUMatShininess, queryShininess);
+
+        glPushMatrix();
+        glTranslatef(queryCubeX, queryCubeY, queryCubeZ);
+        glRotatef(kCubeYawDeg,   0.0f, 1.0f, 0.0f);
+        glRotatef(kCubePitchDeg, 1.0f, 0.0f, 0.0f);
+        glScalef(kCubeSize, kCubeSize, kCubeSize);
+        DrawUnitCube();
+        glPopMatrix();
+    }
+
     // Return to fixed pipeline before drawing GLUT bitmap text
     pglUseProgram(0);
 
@@ -855,6 +941,42 @@ static void display() {
     glutSwapBuffers();
 }
 
+// Runs on a background thread. Reads shininess values from stdin and posts
+// them to gQueryShininess for the render thread to consume.
+static void InputThreadFunc() {
+    char buf[64];
+    while (!gInputThreadShouldExit.load()) {
+        std::fprintf(stdout, "Enter shininess value (1-1000, 0 to quit): ");
+        std::fflush(stdout);
+
+        if (!std::fgets(buf, sizeof(buf), stdin)) {
+            // EOF or read error — stop prompting
+            break;
+        }
+
+        // Parse the entered number
+        float value = 0.0f;
+        try {
+            value = std::stof(std::string(buf));
+        } catch (...) {
+            std::fprintf(stdout, "  Invalid input, please enter a number.\n");
+            continue;
+        }
+
+        if (value <= 0.0f) {
+            // 0 or negative ends the prompt loop; does NOT quit the program
+            std::fprintf(stdout, "  Query input ended. Press ESC in the window to quit.\n");
+            break;
+        }
+
+        // Clamp to the allowed range before storing
+        if (value > 1000.0f) value = 1000.0f;
+
+        gQueryShininess.store(value);
+        std::fprintf(stdout, "  Query cube updated: shininess = %.1f\n", value);
+    }
+}
+
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -863,6 +985,13 @@ int main(int argc, char** argv) {
 
     init();
     std::atexit(ShutdownPhongProgram);
+
+    // Start the background console input thread AFTER the OpenGL context is
+    // initialized (init() runs first) so that gQueryShininess is visible.
+    gInputThread = std::thread(InputThreadFunc);
+    // Detach so glutMainLoop() can block freely; the thread ends on its own
+    // when the user types 0 or closes stdin.
+    gInputThread.detach();
 
     // Register keyboard and idle callbacks for the camera control scheme
     glutKeyboardFunc(onKeyboardDown);
