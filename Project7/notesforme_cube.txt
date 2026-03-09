@@ -1,0 +1,3 @@
+R: rotates the existing cube in place in random, 3d directions
+S: stops the camera movement
+C: continutes the camera movement
