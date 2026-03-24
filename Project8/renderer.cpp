@@ -6,13 +6,32 @@
 #include "renderer.h"
 #include "constants.h"
 #include "obstacle.h"
+#include "player.h"
 
 static float animationTime = 0.0f;
+bool DRAW_HITBOXES = false;  // Toggle with 'H' key
+bool SHOW_FPS = false;        // Toggle with 'F' key
+
+// FPS counter
+static int frameCount = 0;
+static int lastFpsTime = 0;
+static int currentFps = 0;
 
 void updateAnimationTime(float dt) {
     animationTime += dt;
     if (animationTime > COLOR_CYCLE_SPEED) {
         animationTime -= COLOR_CYCLE_SPEED;  // loop the animation
+    }
+}
+
+void updateFpsCounter() {
+    frameCount++;
+    int currentTime = glutGet(GLUT_ELAPSED_TIME);
+
+    if (currentTime - lastFpsTime >= 1000) {  // Update every second
+        currentFps = frameCount;
+        frameCount = 0;
+        lastFpsTime = currentTime;
     }
 }
 
@@ -182,6 +201,82 @@ void drawHUD(int gameState) {
         renderString(WINDOW_W / 2 - 100, WINDOW_H / 2 + 20, GLUT_BITMAP_TIMES_ROMAN_24, "GAME OVER");
         renderString(WINDOW_W / 2 - 120, WINDOW_H / 2 - 40, GLUT_BITMAP_HELVETICA_12, "Press R to restart");
     }
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+void drawHitboxes(const Player& player, const std::vector<Obstacle>& obs, float camX) {
+    if (!DRAW_HITBOXES) return;
+
+    glDisable(GL_BLEND);  // Disable alpha blending for cleaner lines
+
+    // Draw player hitbox (cyan)
+    glColor3f(0.0f, 1.0f, 1.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(player.screenX(), player.y);
+    glVertex2f(player.screenX() + player.w, player.y);
+    glVertex2f(player.screenX() + player.w, player.y + player.h);
+    glVertex2f(player.screenX(), player.y + player.h);
+    glEnd();
+
+    // Draw obstacle hitboxes
+    for (const auto& obstacle : obs) {
+        float screenX = obstacle.worldX - camX;
+
+        // Skip if off-screen
+        if (screenX + obstacle.w < 0 || screenX > WINDOW_W) {
+            continue;
+        }
+
+        if (obstacle.type == ObstacleType::SPIKE) {
+            // Draw spike's actual square hitbox (magenta)
+            float sqSize = obstacle.w * 0.65f;
+            float sqX = screenX + (obstacle.w - sqSize) / 2.0f;
+            float sqY = obstacle.y;
+
+            glColor3f(1.0f, 0.0f, 1.0f);  // magenta
+            glBegin(GL_LINE_LOOP);
+            glVertex2f(sqX, sqY);
+            glVertex2f(sqX + sqSize, sqY);
+            glVertex2f(sqX + sqSize, sqY + sqSize);
+            glVertex2f(sqX, sqY + sqSize);
+            glEnd();
+        } else if (obstacle.type == ObstacleType::PLATFORM) {
+            // Draw platform hitbox (yellow)
+            glColor3f(1.0f, 1.0f, 0.0f);  // yellow
+            glBegin(GL_LINE_LOOP);
+            glVertex2f(screenX, obstacle.y);
+            glVertex2f(screenX + obstacle.w, obstacle.y);
+            glVertex2f(screenX + obstacle.w, obstacle.y + obstacle.h);
+            glVertex2f(screenX, obstacle.y + obstacle.h);
+            glEnd();
+        }
+    }
+
+    glEnable(GL_BLEND);  // Re-enable blending
+}
+
+void drawFpsCounter() {
+    if (!SHOW_FPS) return;
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, WINDOW_W, 0, WINDOW_H, -1, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3f(1.0f, 1.0f, 1.0f);  // white text
+
+    // Create FPS string
+    char fpsStr[32];
+    sprintf(fpsStr, "FPS: %d", currentFps);
+    renderString(10.0f, WINDOW_H - 30.0f, GLUT_BITMAP_HELVETICA_18, fpsStr);
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();

@@ -10,14 +10,45 @@ const float GROUND_Y = 120.0f;           // top of ground strip
 const float PLAYER_SCREEN_X = 200.0f;   // fixed screen X where player appears
 
 // Physics
-const float GRAVITY = -1800.0f;          // units/sec²
+const float GRAVITY = -2200.0f;          // units/sec²
 const float JUMP_VEL = 750.0f;           // units/sec upward
 const float PLAYER_WIDTH = 60.0f;
 const float PLAYER_HEIGHT = 60.0f;
 
+// Grid system (Geometry Dash-style editor grid)
+const float GRID_CELL_SIZE = 60.0f;      // 1 cell = player width/height
+
+// Obstacle dimensions (grid-derived)
+const float SPIKE_W                = 1.0f * GRID_CELL_SIZE;   // 60px
+const float SPIKE_H                = 1.0f * GRID_CELL_SIZE;   // 60px (renderer uses equilateral formula)
+const float PLATFORM_H             = 0.5f * GRID_CELL_SIZE;   // 30px thin ledge
+
+// Level layout (grid-derived)
+const float LEVEL_LENGTH           = 150.0f * GRID_CELL_SIZE; // 9000px — unchanged
+const float RUNWAY_CELLS           = 10.0f;   // clear cells before first obstacle
+const float BUFFER_CELLS           = 10.0f;   // clear cells at end
+
+// Inter-obstacle gap range (in cells)
+const float GAP_MIN_CELLS          = 4.0f;    // min gap between obstacle groups
+const float GAP_RANGE_CELLS        = 4.0f;    // rand range (4–7 cells = 240–420px)
+
+// Spike cluster
+const float SPIKE_INTRA_GAP        = 0.0f;    // spikes in a cluster touch (no gap)
+
+// Platform sizing (in cells)
+const float PLATFORM_MIN_CELLS     = 3.0f;    // min 3 cells wide = 180px
+const float PLATFORM_RANGE_CELLS   = 3.0f;    // rand range (3–5 cells = 180–300px)
+
+// Platform elevation above GROUND_Y (in cells)
+const float PLAT_ELEV_MIN_CELLS    = 1.0f;    // 1 cell = 60px above ground
+const float PLAT_ELEV_RANGE_CELLS  = 3.0f;    // rand range (1–3 cells = 60–180px)
+
+// Finish line
+const float FINISH_W               = 2.0f * GRID_CELL_SIZE;   // 120px
+const float FINISH_H               = 3.0f * GRID_CELL_SIZE;   // 180px
+
 // Level & Scroll
 const float SCROLL_SPEED = 350.0f;       // units/sec (world moves left)
-const float LEVEL_LENGTH = 9000.0f;      // total level width
 const float DT = 0.016f;                 // fixed timestep (16ms)
 
 // Colors (RGB 0-1)
@@ -31,6 +62,6 @@ const float SPIKE_FILL_R = 0.0f, SPIKE_FILL_G = 0.0f, SPIKE_FILL_B = 0.0f;   // 
 const float SPIKE_OUTLINE_R = 1.0f, SPIKE_OUTLINE_G = 1.0f, SPIKE_OUTLINE_B = 1.0f; // white outline
 
 // Color animation parameters (hue rotation)
-const float COLOR_CYCLE_SPEED = 30.0f;  // seconds for one full hue rotation (very slow)
+const float COLOR_CYCLE_SPEED = 35.0f;  // seconds for one full hue rotation (very slow)
 
 #endif

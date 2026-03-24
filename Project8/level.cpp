@@ -13,9 +13,9 @@ void Level::generate(int levelSeed) {
     srand(seed);
     cameraX = 0;
 
-    float x = 600.0f;  // start position (give runway)
+    float x = RUNWAY_CELLS * GRID_CELL_SIZE;  // start position (give runway)
 
-    while (x < LEVEL_LENGTH - 600.0f) {
+    while (x < LEVEL_LENGTH - BUFFER_CELLS * GRID_CELL_SIZE) {
         // 60% spike, 40% platform
         int roll = rand() % 100;
 
@@ -23,30 +23,30 @@ void Level::generate(int levelSeed) {
             // Spike cluster: 1-2 consecutive spikes (max 2 to keep level playable)
             int numSpikes = 1 + (rand() % 2);
             for (int i = 0; i < numSpikes; i++) {
-                Obstacle spike(ObstacleType::SPIKE, x, GROUND_Y, 50.0f, 80.0f,
+                Obstacle spike(ObstacleType::SPIKE, x, GROUND_Y, SPIKE_W, SPIKE_H,
                                glm::vec3(1.0f, 1.0f, 1.0f));  // white spikes
                 obstacles.push_back(spike);
-                x += 50.0f + 20.0f;  // spike width + gap
+                x += SPIKE_W + SPIKE_INTRA_GAP;  // spike width + gap
             }
-            x -= 20.0f;  // remove last gap
+            x -= SPIKE_INTRA_GAP;  // remove last gap
         } else {
             // Platform: elevated, variable width
-            float platformWidth = 150.0f + (rand() % 150);
-            float platformHeight = 20.0f;
-            float platformY = GROUND_Y + 80.0f + (rand() % 100);  // 80-180 units above ground
+            float platformWidth  = (PLATFORM_MIN_CELLS + (rand() % (int)PLATFORM_RANGE_CELLS)) * GRID_CELL_SIZE;
+            float platformHeight = PLATFORM_H;
+            float platformY      = GROUND_Y + (PLAT_ELEV_MIN_CELLS + (rand() % (int)PLAT_ELEV_RANGE_CELLS)) * GRID_CELL_SIZE;
 
             Obstacle platform(ObstacleType::PLATFORM, x, platformY, platformWidth, platformHeight,
                              glm::vec3(PLATFORM_R, PLATFORM_G, PLATFORM_B));
             obstacles.push_back(platform);
         }
 
-        // Gap to next obstacle: 250-450 units
-        x += 250.0f + (rand() % 200);
+        // Gap to next obstacle: 4-7 cells
+        x += (GAP_MIN_CELLS + (rand() % (int)GAP_RANGE_CELLS)) * GRID_CELL_SIZE;
     }
 
     // Add finish line (gold platform at end)
-    float finishX = LEVEL_LENGTH - 200.0f;
-    Obstacle finishLine(ObstacleType::PLATFORM, finishX, GROUND_Y, 100.0f, 150.0f,
+    float finishX = LEVEL_LENGTH - 3.0f * GRID_CELL_SIZE;
+    Obstacle finishLine(ObstacleType::PLATFORM, finishX, GROUND_Y, FINISH_W, FINISH_H,
                        glm::vec3(FINISH_R, FINISH_G, FINISH_B));
     obstacles.push_back(finishLine);
 }
@@ -60,5 +60,5 @@ bool Level::isFinished(float playerWorldX) const {
 }
 
 float Level::getFinishLineX() const {
-    return LEVEL_LENGTH - 200.0f;
+    return LEVEL_LENGTH - 3.0f * GRID_CELL_SIZE;
 }

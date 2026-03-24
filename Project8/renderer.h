@@ -6,12 +6,20 @@
 
 // Forward declaration
 struct Obstacle;
+struct Player;
 
 // Renderer initialization
 void initRenderer();
 
+// Debug visualization
+extern bool DRAW_HITBOXES;   // Toggle hitbox rendering with 'H'
+extern bool SHOW_FPS;        // Toggle FPS counter with 'F'
+void drawHitboxes(const Player& player, const std::vector<Obstacle>& obs, float camX);
+void drawFpsCounter();
+
 // Time tracking for animations
 void updateAnimationTime(float dt);
+void updateFpsCounter();
 
 // Color animation
 glm::vec3 getAnimatedSkyColor();

@@ -38,15 +38,22 @@ void display() {
     // Draw player cube
     drawQuad(player.screenX(), player.y, player.w, player.h, glm::vec3(PLAYER_R, PLAYER_G, PLAYER_B));
 
+    // Draw debug hitboxes
+    drawHitboxes(player, level.obstacles, level.cameraX);
+
     // Draw HUD (game state messages)
     drawHUD(gameState);
+
+    // Draw FPS counter
+    drawFpsCounter();
 
     glutSwapBuffers();
 }
 
 void timer(int value) {
-    // Update animation time always
+    // Update animation time and FPS counter always
     updateAnimationTime(DT);
+    updateFpsCounter();
 
     if (gameState == PLAYING) {
         player.update(DT, GROUND_Y);
@@ -93,6 +100,14 @@ void keyboard(unsigned char key, int x, int y) {
         gameState = MENU;
         player.reset();
         level.generate(rand());  // new seed for new level
+    }
+    if (key == 'h' || key == 'H') {  // Toggle hitbox debug
+        extern bool DRAW_HITBOXES;
+        DRAW_HITBOXES = !DRAW_HITBOXES;
+    }
+    if (key == 'f' || key == 'F') {  // Toggle FPS counter
+        extern bool SHOW_FPS;
+        SHOW_FPS = !SHOW_FPS;
     }
 }
 
