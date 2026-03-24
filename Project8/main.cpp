@@ -35,8 +35,14 @@ void display() {
     // Draw obstacles (spikes and platforms)
     drawObstacles(level.obstacles, level.cameraX);
 
-    // Draw player cube
-    drawQuad(player.screenX(), player.y, player.w, player.h, glm::vec3(PLAYER_R, PLAYER_G, PLAYER_B));
+    // Draw player cube with rotation and white outline
+    drawQuadRotatedWithOutline(player.screenX(), player.y, player.w, player.h, player.rotation,
+                               glm::vec3(PLAYER_R, PLAYER_G, PLAYER_B),
+                               glm::vec3(1.0f, 1.0f, 1.0f),  // white outline
+                               3.0f);  // 3 pixel outline
+
+    // Draw player face (eyes and mouth)
+    drawPlayerFace(player.screenX(), player.y, player.w, player.h, player.rotation);
 
     // Draw debug hitboxes
     drawHitboxes(player, level.obstacles, level.cameraX);
@@ -68,9 +74,16 @@ void timer(int value) {
                 }
             } else if (obs.type == ObstacleType::PLATFORM) {
                 if (checkCollisionWithPlatform(player, obs, level.cameraX)) {
-                    player.y = obs.y + obs.h;
-                    player.velY = 0;
-                    player.onGround = true;
+                    float platTop = obs.y + obs.h;
+                    // Only land on platform if player was above it (not jumping through from below)
+                    if (player.prevY >= platTop) {
+                        player.y = obs.y + obs.h;
+                        player.velY = 0;
+                        player.onGround = true;
+                        // Snap rotation to nearest 90°
+                        player.rotation = snapRotationTo90(player.rotation);
+                        player.timeInAir = 0;
+                    }
                 }
             }
         }

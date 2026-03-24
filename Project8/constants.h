@@ -14,6 +14,7 @@ const float GRAVITY = -2200.0f;          // units/sec²
 const float JUMP_VEL = 750.0f;           // units/sec upward
 const float PLAYER_WIDTH = 60.0f;
 const float PLAYER_HEIGHT = 60.0f;
+const float ROTATION_SPEED = -270.0f;     // degrees/sec during jump
 
 // Grid system (Geometry Dash-style editor grid)
 const float GRID_CELL_SIZE = 60.0f;      // 1 cell = player width/height
@@ -52,7 +53,7 @@ const float SCROLL_SPEED = 350.0f;       // units/sec (world moves left)
 const float DT = 0.016f;                 // fixed timestep (16ms)
 
 // Colors (RGB 0-1)
-const float PLAYER_R = 0.2f, PLAYER_G = 0.6f, PLAYER_B = 1.0f;  // blue
+const float PLAYER_R = 1.0f, PLAYER_G = 1.0f, PLAYER_B = 0.0f;  // yellow
 const float PLATFORM_R = 0.7f, PLATFORM_G = 0.7f, PLATFORM_B = 0.7f;  // gray
 const float FINISH_R = 1.0f, FINISH_G = 0.85f, FINISH_B = 0.0f; // gold
 const float GROUND_BOT_R = 0.2f, GROUND_BOT_G = 0.15f, GROUND_BOT_B = 0.1f;   // dark base

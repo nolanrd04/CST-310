@@ -91,6 +91,128 @@ void drawQuad(float x, float y, float w, float h, glm::vec3 color) {
     glRectf(x, y, x + w, y + h);
 }
 
+void drawQuadRotated(float x, float y, float w, float h, float rotation, glm::vec3 color) {
+    glColor3f(color.x, color.y, color.z);
+
+    // Save the current matrix
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    // Translate to the center of the quad
+    float centerX = x + w / 2.0f;
+    float centerY = y + h / 2.0f;
+    glTranslatef(centerX, centerY, 0.0f);
+
+    // Rotate around Z axis
+    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
+    // Draw quad centered at origin
+    glRectf(-w / 2.0f, -h / 2.0f, w / 2.0f, h / 2.0f);
+
+    // Restore the matrix
+    glPopMatrix();
+}
+
+void drawQuadRotatedWithOutline(float x, float y, float w, float h, float rotation, glm::vec3 fillColor, glm::vec3 outlineColor, float outlineWidth) {
+    // Save the current matrix
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    // Translate to the center of the quad
+    float centerX = x + w / 2.0f;
+    float centerY = y + h / 2.0f;
+    glTranslatef(centerX, centerY, 0.0f);
+
+    // Rotate around Z axis
+    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
+    // Draw larger outline first
+    float outlineScale = 1.0f + (outlineWidth / w);
+    float outlineW = w * outlineScale;
+    float outlineH = h * outlineScale;
+
+    glColor3f(outlineColor.x, outlineColor.y, outlineColor.z);
+    glRectf(-outlineW / 2.0f, -outlineH / 2.0f, outlineW / 2.0f, outlineH / 2.0f);
+
+    // Draw filled quad on top
+    glColor3f(fillColor.x, fillColor.y, fillColor.z);
+    glRectf(-w / 2.0f, -h / 2.0f, w / 2.0f, h / 2.0f);
+
+    // Restore the matrix
+    glPopMatrix();
+}
+
+void drawPlayerFace(float x, float y, float w, float h, float rotation) {
+    // Draw eyes and mouth on the player, rotated with it
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    // Translate to center and rotate
+    float centerX = x + w / 2.0f;
+    float centerY = y + h / 2.0f;
+    glTranslatef(centerX, centerY, 0.0f);
+    glRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
+    glColor3f(0.0f, 0.0f, 1.0f);  // blue eyes and mouth
+
+    // Eye dimensions
+    float eyeSize = w * 0.2f;      // 20% of player width
+    float eyeSpacing = w * 0.25f;  // eyes positioned 25% from center
+    float eyeYOffset = -h * 0.15f; // eyes positioned slightly above center
+
+    // Left eye
+    glRectf(-eyeSpacing - eyeSize / 2.0f, eyeYOffset - eyeSize / 2.0f,
+            -eyeSpacing + eyeSize / 2.0f, eyeYOffset + eyeSize / 2.0f);
+
+    // Right eye
+    glRectf(eyeSpacing - eyeSize / 2.0f, eyeYOffset - eyeSize / 2.0f,
+            eyeSpacing + eyeSize / 2.0f, eyeYOffset + eyeSize / 2.0f);
+
+    // Mouth - thin rectangle spanning between eyes
+    float mouthWidth = eyeSpacing * 2.0f + eyeSize;  // from left edge of left eye to right edge of right eye
+    float mouthHeight = h * 0.08f;                    // thin rectangle
+    float mouthYOffset = h * 0.05f;                   // below the eyes
+
+    glRectf(-mouthWidth / 2.0f, mouthYOffset - mouthHeight / 2.0f,
+            mouthWidth / 2.0f, mouthYOffset + mouthHeight / 2.0f);
+
+    glPopMatrix();
+}
+
+void drawPlatformWithGradient(float x, float y, float w, float h, glm::vec3 outlineColor, float outlineWidth) {
+    // Draw white outline border as thick lines
+    glColor3f(outlineColor.x, outlineColor.y, outlineColor.z);
+    glLineWidth(outlineWidth);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(x, y);
+    glVertex2f(x + w, y);
+    glVertex2f(x + w, y + h);
+    glVertex2f(x, y + h);
+    glEnd();
+    glLineWidth(1.0f);  // Reset line width
+
+    // Draw gradient quad (top = opaque dark, bottom = transparent)
+    glBegin(GL_QUADS);
+
+    // Top-left: opaque dark gray
+    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+    glVertex2f(x, y + h);
+
+    // Top-right: opaque dark gray
+    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+    glVertex2f(x + w, y + h);
+
+    // Bottom-right: transparent
+    glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
+    glVertex2f(x + w, y);
+
+    // Bottom-left: transparent
+    glColor4f(0.0f, 0.0f, 0.0f, 0.2f);
+    glVertex2f(x, y);
+
+    glEnd();
+}
+
 void drawTriangle(float x, float y, float w, float h, glm::vec3 color) {
     // Draw equilateral triangle: height = width * sqrt(3)/2
     float eqHeight = w * std::sqrt(3.0f) / 2.0f;
@@ -161,7 +283,10 @@ void drawObstacles(const std::vector<Obstacle>& obs, float camX) {
                                    glm::vec3(SPIKE_OUTLINE_R, SPIKE_OUTLINE_G, SPIKE_OUTLINE_B),
                                    3.0f);  // 3 pixel outline
         } else {
-            drawQuad(screenX, obstacle.y, obstacle.w, obstacle.h, obstacle.color);
+            // Draw platform with gradient fade and white outline
+            drawPlatformWithGradient(screenX, obstacle.y, obstacle.w, obstacle.h,
+                                    glm::vec3(1.0f, 1.0f, 1.0f),  // white outline
+                                    3.0f);  // 3 pixel outline
         }
     }
 }
@@ -213,14 +338,24 @@ void drawHitboxes(const Player& player, const std::vector<Obstacle>& obs, float 
 
     glDisable(GL_BLEND);  // Disable alpha blending for cleaner lines
 
-    // Draw player hitbox (cyan)
-    glColor3f(0.0f, 1.0f, 1.0f);
+    // Draw player hitbox (cyan) - rotated
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+
+    float centerX = player.screenX() + player.w / 2.0f;
+    float centerY = player.y + player.h / 2.0f;
+    glTranslatef(centerX, centerY, 0.0f);
+    glRotatef(player.rotation, 0.0f, 0.0f, 1.0f);
+
+    glColor3f(0.0f, 1.0f, 1.0f);  // cyan
     glBegin(GL_LINE_LOOP);
-    glVertex2f(player.screenX(), player.y);
-    glVertex2f(player.screenX() + player.w, player.y);
-    glVertex2f(player.screenX() + player.w, player.y + player.h);
-    glVertex2f(player.screenX(), player.y + player.h);
+    glVertex2f(-player.w / 2.0f, -player.h / 2.0f);
+    glVertex2f(player.w / 2.0f, -player.h / 2.0f);
+    glVertex2f(player.w / 2.0f, player.h / 2.0f);
+    glVertex2f(-player.w / 2.0f, player.h / 2.0f);
     glEnd();
+
+    glPopMatrix();
 
     // Draw obstacle hitboxes
     for (const auto& obstacle : obs) {
