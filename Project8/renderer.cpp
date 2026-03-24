@@ -73,25 +73,31 @@ void drawQuad(float x, float y, float w, float h, glm::vec3 color) {
 }
 
 void drawTriangle(float x, float y, float w, float h, glm::vec3 color) {
+    // Draw equilateral triangle: height = width * sqrt(3)/2
+    float eqHeight = w * std::sqrt(3.0f) / 2.0f;
+
     glColor3f(color.x, color.y, color.z);
     glBegin(GL_TRIANGLES);
     glVertex2f(x, y);              // bottom-left
     glVertex2f(x + w, y);          // bottom-right
-    glVertex2f(x + w/2.0f, y + h); // top-center
+    glVertex2f(x + w/2.0f, y + eqHeight); // top-center
     glEnd();
 }
 
 void drawTriangleWithOutline(float x, float y, float w, float h, glm::vec3 fillColor, glm::vec3 outlineColor, float outlineWidth) {
-    // Draw larger white outline first
+    // Draw equilateral triangles with outline
+    float eqHeight = w * std::sqrt(3.0f) / 2.0f;
+
+    // Draw larger outline first
     float outlineScale = 1.0f + (outlineWidth / w);
     float offsetX = w * (outlineScale - 1.0f) / 2.0f;
-    float offsetY = h * (outlineScale - 1.0f);
+    float offsetY = eqHeight * (outlineScale - 1.0f);
 
     glColor3f(outlineColor.x, outlineColor.y, outlineColor.z);
     glBegin(GL_TRIANGLES);
     glVertex2f(x - offsetX, y);                              // bottom-left
     glVertex2f(x + w + offsetX, y);                          // bottom-right
-    glVertex2f(x + w/2.0f, y + h + offsetY);                // top-center
+    glVertex2f(x + w/2.0f, y + eqHeight + offsetY);         // top-center
     glEnd();
 
     // Draw black fill on top
@@ -99,7 +105,7 @@ void drawTriangleWithOutline(float x, float y, float w, float h, glm::vec3 fillC
     glBegin(GL_TRIANGLES);
     glVertex2f(x, y);              // bottom-left
     glVertex2f(x + w, y);          // bottom-right
-    glVertex2f(x + w/2.0f, y + h); // top-center
+    glVertex2f(x + w/2.0f, y + eqHeight); // top-center
     glEnd();
 }
 

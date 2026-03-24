@@ -19,9 +19,14 @@ bool checkCollisionWithSpike(const Player& p, const Obstacle& spike, float camX)
     float spikeScreenX = spike.worldX - camX;
     float playerScreenX = p.screenX();
 
-    // AABB overlap: player vs spike
+    // Use a smaller square hitbox inside the triangle (centered horizontally at base)
+    float sqSize = spike.w * 0.65f;  // Square is 65% of triangle width
+    float sqX = spikeScreenX + (spike.w - sqSize) / 2.0f;  // Center horizontally
+    float sqY = spike.y;  // Positioned at triangle base
+
+    // AABB overlap: player vs square hitbox inside spike
     return aabbOverlap(playerScreenX, p.y, p.w, p.h,
-                      spikeScreenX, spike.y, spike.w, spike.h);
+                      sqX, sqY, sqSize, sqSize);
 }
 
 bool checkCollisionWithPlatform(const Player& p, const Obstacle& platform, float camX) {
