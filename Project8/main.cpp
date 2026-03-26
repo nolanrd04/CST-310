@@ -29,8 +29,11 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Draw background and ground
-    drawBackground();
-    drawGround(0.0f);
+    drawBackground(level.cameraX);
+    drawGround(level.cameraX);
+
+    // Draw ground hint text (scrolls with world)
+    drawGroundText(level.cameraX);
 
     // Draw obstacles (spikes and platforms)
     drawObstacles(level.obstacles, level.cameraX);
@@ -137,7 +140,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(WINDOW_W, WINDOW_H);
-    glutCreateWindow("Geometry Dash");
+    glutCreateWindow("Shape Run");
 
     init();
 

@@ -31,11 +31,12 @@ void drawQuadRotated(float screenX, float screenY, float w, float h, float rotat
 void drawQuadRotatedWithOutline(float screenX, float screenY, float w, float h, float rotation, glm::vec3 fillColor, glm::vec3 outlineColor, float outlineWidth);
 void drawTriangle(float screenX, float screenY, float w, float h, glm::vec3 color);
 void drawTriangleWithOutline(float screenX, float screenY, float w, float h, glm::vec3 fillColor, glm::vec3 outlineColor, float outlineWidth);
-void drawBackground();
+void drawBackground(float camX);
 void drawGround(float camX);
 void drawObstacles(const std::vector<Obstacle>& obs, float camX);
 void drawPlayerFace(float x, float y, float w, float h, float rotation);
 void drawPlatformWithGradient(float x, float y, float w, float h, glm::vec3 outlineColor, float outlineWidth);
+void drawGroundText(float camX);
 void drawHUD(int gameState);
 
 #endif

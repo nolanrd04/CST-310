@@ -10,11 +10,11 @@ const float GROUND_Y = 120.0f;           // top of ground strip
 const float PLAYER_SCREEN_X = 200.0f;   // fixed screen X where player appears
 
 // Physics
-const float GRAVITY = -2200.0f;          // units/sec²
-const float JUMP_VEL = 750.0f;           // units/sec upward
+const float GRAVITY = -2530.0f;          // units/sec²
+const float JUMP_VEL = 900.0f;           // units/sec upward
 const float PLAYER_WIDTH = 60.0f;
 const float PLAYER_HEIGHT = 60.0f;
-const float ROTATION_SPEED = -270.0f;     // degrees/sec during jump
+const float ROTATION_SPEED = -270.f;     // degrees/sec during jump
 
 // Grid system (Geometry Dash-style editor grid)
 const float GRID_CELL_SIZE = 60.0f;      // 1 cell = player width/height
@@ -41,8 +41,8 @@ const bool ENABLE_PLATFORM_TOP_SPIKES = true;
 const bool ENABLE_PLATFORM_UNDER_SPIKES = true;
 
 // Platform sizing (in cells)
-const float PLATFORM_MIN_CELLS     = 3.0f;    // min 3 cells wide = 180px
-const float PLATFORM_RANGE_CELLS   = 3.0f;    // rand range (3–5 cells = 180–300px)
+const float PLATFORM_MIN_CELLS     = 1.0f;    // min 1 cells wide = 60px
+const float PLATFORM_RANGE_CELLS   = 3.0f;    // rand range (1–3 cells = 60–180px)
 
 // Platform elevation above GROUND_Y (in cells)
 const float PLAT_ELEV_MIN_CELLS    = 1.0f;    // 1 cell = 60px above ground
@@ -53,7 +53,7 @@ const float FINISH_W               = 2.0f * GRID_CELL_SIZE;   // 120px
 const float FINISH_H               = 3.0f * GRID_CELL_SIZE;   // 180px
 
 // Level & Scroll
-const float SCROLL_SPEED = 350.0f;       // units/sec (world moves left)
+const float SCROLL_SPEED = 450.0f;       // units/sec (world moves left)
 const float DT = 0.016f;                 // fixed timestep (16ms)
 
 // Colors (RGB 0-1)

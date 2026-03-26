@@ -13,6 +13,7 @@ enum class SafeLane { GROUND, TOP };
 
 struct PlatformPlan {
     float x;
+    float width;
     float topY;
     PlatformHazard hazard;
     SafeLane laneAfter;
@@ -245,13 +246,10 @@ void Level::generate(int levelSeed) {
     seed = levelSeed;
     cameraX = 0;
 
-    // Fixed platform layout.
-    const float platformWidthCells = 4.0f;
-    const float platformSpacingCells = 6.0f;
-    const float platformWidth = platformWidthCells * GRID_CELL_SIZE;
-    const float platformSpacing = platformSpacingCells * GRID_CELL_SIZE;
-    const float edgeGap = platformSpacing - platformWidth;
-    const float transitionRangeRequirement = edgeGap + (0.25f * GRID_CELL_SIZE);
+    // Platform layout with random widths.
+    const float gapBetweenPlatformsCells = 3.0f;  // fixed gap between end of one and start of next
+    const float gapBetweenPlatforms = gapBetweenPlatformsCells * GRID_CELL_SIZE;
+    const float transitionRangeRequirement = gapBetweenPlatforms + (0.25f * GRID_CELL_SIZE);
 
     // Player ability model.
     const float maxJumpHeight = computeMaxJumpHeight();
@@ -275,23 +273,32 @@ void Level::generate(int levelSeed) {
                               int topSpikeWhileOnTopChance) {
         obstacles.clear();
 
-        // Build evenly spaced platform anchors first.
+        // Build platform anchors with random widths.
         std::vector<PlatformPlan> plans;
         float x = RUNWAY_CELLS * GRID_CELL_SIZE;  // start position (give runway)
         int tier = 1;  // first elevated platform is always tier 1 (reachable from ground).
-        while (x + platformWidth < generationEnd) {
+        while (true) {
+            // Random width for this platform
+            int widthCells = randomInRangeInclusive(
+                static_cast<int>(PLATFORM_MIN_CELLS),
+                static_cast<int>(PLATFORM_MIN_CELLS + PLATFORM_RANGE_CELLS));
+            float thisWidth = widthCells * GRID_CELL_SIZE;
+
+            if (x + thisWidth >= generationEnd) break;
+
             if (!plans.empty()) {
                 tier = chooseNextPlatformTier(tier);
             }
 
             PlatformPlan plan;
             plan.x = x;
+            plan.width = thisWidth;
             plan.topY = (tier == 1) ? tier1Top : tier2Top;
             plan.hazard = PlatformHazard::NONE;
             plan.laneAfter = SafeLane::GROUND;
             plans.push_back(plan);
 
-            x += platformSpacing;
+            x += thisWidth + gapBetweenPlatforms;
         }
 
         // Ability-aware hazard planning with a guaranteed path lane.
@@ -370,14 +377,14 @@ void Level::generate(int levelSeed) {
         }
 
         // Emit platforms + platform hazards.
-        const int maxPlatformSpikeCount = static_cast<int>(platformWidth / SPIKE_W);
-        const int minPlatformSpikeCount = std::min(minImpassablePlatformSpikes, maxPlatformSpikeCount);
-
         for (const auto& plan : plans) {
             const float platformY = plan.topY - PLATFORM_H;
-            Obstacle platform(ObstacleType::PLATFORM, plan.x, platformY, platformWidth, PLATFORM_H,
+            Obstacle platform(ObstacleType::PLATFORM, plan.x, platformY, plan.width, PLATFORM_H,
                               glm::vec3(PLATFORM_R, PLATFORM_G, PLATFORM_B));
             obstacles.push_back(platform);
+
+            const int maxPlatformSpikeCount = static_cast<int>(plan.width / SPIKE_W);
+            const int minPlatformSpikeCount = std::min(minImpassablePlatformSpikes, maxPlatformSpikeCount);
 
             if (plan.hazard == PlatformHazard::NONE || maxPlatformSpikeCount <= 0 || minPlatformSpikeCount <= 0) {
                 continue;
@@ -385,7 +392,7 @@ void Level::generate(int levelSeed) {
 
             const int platformSpikeCount = randomInRangeInclusive(minPlatformSpikeCount, maxPlatformSpikeCount);
             const float clusterWidth = platformSpikeCount * SPIKE_W;
-            const float clusterStartX = plan.x + (platformWidth - clusterWidth) / 2.0f;
+            const float clusterStartX = plan.x + (plan.width - clusterWidth) / 2.0f;
 
             for (int i = 0; i < platformSpikeCount; i++) {
                 const float spikeX = clusterStartX + i * SPIKE_W;
@@ -417,7 +424,7 @@ void Level::generate(int levelSeed) {
                 continue;
             }
 
-            const float gapStart = plans[i].x + platformWidth;
+            const float gapStart = plans[i].x + plans[i].width;
             const float gapEnd = plans[i + 1].x;
             const float gapWidth = gapEnd - gapStart;
             const int maxGapSpikeCountBySpace = static_cast<int>(gapWidth / SPIKE_W);

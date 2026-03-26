@@ -250,17 +250,95 @@ void drawTriangleWithOutline(float x, float y, float w, float h, glm::vec3 fillC
     glEnd();
 }
 
-void drawBackground() {
+// Simple hash for deterministic pseudo-random background squares
+static float pseudoRand(int seed) {
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return static_cast<float>(seed & 0x7FFFFFFF) / static_cast<float>(0x7FFFFFFF);
+}
+
+void drawBackground(float camX) {
     glm::vec3 skyColor = getAnimatedSkyColor();
     glColor3f(skyColor.x, skyColor.y, skyColor.z);
     glRectf(0.0f, 0.0f, WINDOW_W, WINDOW_H);
+
+    // Background decoration squares - parallax at 30% of world speed
+    const float parallax = 0.3f;
+    const float bgOffset = camX * parallax;
+    // Slightly brighter than the sky
+    glm::vec3 sqColor = skyColor * 1.35f;
+
+    // Tile region width for repeating pattern
+    const float tileWidth = 800.0f;
+    const int squaresPerTile = 8;
+
+    // Determine which tiles are visible
+    float leftEdge = bgOffset - tileWidth;
+    float rightEdge = bgOffset + WINDOW_W + tileWidth;
+    int tileStart = static_cast<int>(std::floor(leftEdge / tileWidth));
+    int tileEnd = static_cast<int>(std::floor(rightEdge / tileWidth));
+
+    glColor3f(sqColor.x, sqColor.y, sqColor.z);
+    for (int tile = tileStart; tile <= tileEnd; tile++) {
+        for (int i = 0; i < squaresPerTile; i++) {
+            int seed = tile * 137 + i * 31;
+            float rx = pseudoRand(seed);
+            float ry = pseudoRand(seed + 7);
+            float rs = pseudoRand(seed + 13);
+
+            float size = 30.0f + rs * 70.0f;  // 30-100px squares
+            float worldX = tile * tileWidth + rx * tileWidth;
+            float worldY = GROUND_Y + 40.0f + ry * (WINDOW_H - GROUND_Y - 40.0f - size);
+
+            float screenX = worldX - bgOffset;
+            if (screenX + size < 0 || screenX > WINDOW_W) continue;
+
+            glRectf(screenX, worldY, screenX + size, worldY + size);
+        }
+    }
 }
 
 void drawGround(float camX) {
-    // Top green strip with animation
+    // Ground strip with animation
     glm::vec3 groundColor = getAnimatedGroundColor();
     glColor3f(groundColor.x, groundColor.y, groundColor.z);
     glRectf(0.0f, 0.0f, WINDOW_W, GROUND_Y);
+
+    // Ground decoration squares - move at world speed, tiled pattern
+    glm::vec3 groundSqColor = groundColor * 1.2f;
+    glColor3f(groundSqColor.x, groundSqColor.y, groundSqColor.z);
+
+    const float sqSize = 40.0f;
+    const float spacing = 80.0f;  // distance between square centers
+    const float padding = 10.0f;  // keep squares away from the very top
+
+    // Two staggered rows of squares
+    const float row1Y = 20.0f;
+    const float row2Y = 60.0f;
+
+    // Calculate starting grid position based on camera
+    float startX = -std::fmod(camX, spacing);
+    if (startX > 0) startX -= spacing;
+
+    for (float x = startX - spacing; x < WINDOW_W + spacing; x += spacing) {
+        // Row 1
+        if (row1Y + sqSize <= GROUND_Y - padding) {
+            glRectf(x, row1Y, x + sqSize, row1Y + sqSize);
+        }
+        // Row 2 - offset by half spacing for stagger
+        float x2 = x + spacing * 0.5f;
+        if (row2Y + sqSize <= GROUND_Y - padding) {
+            glRectf(x2, row2Y, x2 + sqSize, row2Y + sqSize);
+        }
+    }
+
+    // Solid white line on top of the ground
+    glColor3f(1.0f, 1.0f, 1.0f);
+    float lineHeight = 3.0f;
+    glRectf(0.0f, GROUND_Y - lineHeight, WINDOW_W, GROUND_Y);
 
     // Bottom dark strip
     glColor3f(GROUND_BOT_R, GROUND_BOT_G, GROUND_BOT_B);
@@ -296,6 +374,23 @@ static void renderString(float x, float y, void* font, const char* str) {
     while (*str) {
         glutBitmapCharacter(font, *str);
         str++;
+    }
+}
+
+void drawGroundText(float camX) {
+    // Place text in the runway area, scrolling with the world
+    const char* msg = "Press space to jump and avoid the spikes!";
+    float worldX = PLAYER_SCREEN_X + 80.0f;  // just ahead of player start
+    float screenX = worldX - camX;
+
+    // Don't draw if scrolled off screen
+    if (screenX > WINDOW_W || screenX + 500.0f < 0) return;
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glRasterPos2f(screenX, GROUND_Y - 30.0f);
+    while (*msg) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *msg);
+        msg++;
     }
 }
 
