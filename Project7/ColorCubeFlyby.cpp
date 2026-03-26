@@ -366,49 +366,6 @@ void keyboard(unsigned char key, int x, int y) {
   }
 }
 
-// TODO (proposed change 2; not implemented):
-// Concrete code sketch for replacing switch/case with a shared control map:
-//
-// /*
-// #include <cctype>
-// #include <functional>
-// #include <string>
-// #include <unordered_map>
-// #include <vector>
-//
-// struct ControlBinding {
-//   const char* actionName;
-//   const char* description;
-//   std::function<void()> run;
-// };
-//
-// static const std::unordered_map<char, ControlBinding> kControls = {
-//   {'r', {"rotate", "rotate cube 15 degrees", [] { rotZ += 15.0f; }}},
-//   {'s', {"pause_camera", "stop camera movement", [] { cameraPaused = true; }}},
-//   {'c', {"resume_camera", "continue camera movement", [] { cameraPaused = false; }}},
-//   {'u', {"pan_up", "move image up", [] { panY += 0.5f; }}},
-//   {'d', {"pan_down", "move image down", [] { panY -= 0.5f; }}},
-//   {'+', {"zoom_in", "zoom in", [] {
-//     zoomDistance /= 1.2f;
-//     if (zoomDistance < 0.2f) zoomDistance = 0.2f;
-//   }}},
-//   {'-', {"zoom_out", "zoom out", [] {
-//     zoomDistance *= 1.2f;
-//     if (zoomDistance > 5.0f) zoomDistance = 5.0f;
-//   }}},
-//   {'\x1b', {"exit", "exit app", [] { std::exit(0); }}},
-// };
-//
-// void keyboard(unsigned char key, int, int) {
-//   char normalized = static_cast<char>(std::tolower(static_cast<unsigned char>(key)));
-//   if (key == '=') normalized = '+';  // alias
-//   if (key == '_') normalized = '-';  // alias
-//
-//   auto it = kControls.find(normalized);
-//   if (it != kControls.end()) it->second.run();
-// }
-// */
-
 // When the window is reshaped we have to recompute the camera settings to
 // match the new window shape.  Set the viewport to (0,0)-(w,h).  Set the
 // camera to have a 60 degree vertical field of view, aspect ratio w/h, near
@@ -437,61 +394,7 @@ int main(int argc, char** argv) {
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutInitWindowSize(500, 500);
   glutCreateWindow("The RGB Color Cube - Controls: R=rotate, S=stop camera, C=continue camera, +/-=zoom, U/D=pan, ESC=exit");
-  // TODO (proposed change 1 + 3; not implemented):
-  // Concrete code sketch for dynamic title + argv parsing:
-  //
-  // /*
-  // #include <charconv>
-  // #include <optional>
-  // #include <string>
-  // #include <string_view>
-  // #include <vector>
-  //
-  // static std::optional<float> parseFloat(std::string_view s) {
-  //   float out = 0.0f;
-  //   auto* first = s.data();
-  //   auto* last = s.data() + s.size();
-  //   auto [ptr, ec] = std::from_chars(first, last, out);
-  //   if (ec != std::errc() || ptr != last) return std::nullopt;
-  //   return out;
-  // }
-  //
-  // static std::string buildWindowTitle(const std::string& appName,
-  //                                     const std::vector<std::string>& controls) {
-  //   std::string title = appName + " - Controls: ";
-  //   for (size_t i = 0; i < controls.size(); ++i) {
-  //     if (i) title += ", ";
-  //     title += controls[i];
-  //   }
-  //   return title;
-  // }
-  //
-  // std::string customTitle;
-  // for (int i = 1; i < argc; ++i) {
-  //   std::string_view arg(argv[i]);
-  //
-  //   if (arg == "--paused") {
-  //     cameraPaused = true;
-  //   } else if (arg.rfind("--speed=", 0) == 0) {
-  //     if (auto v = parseFloat(arg.substr(8))) CUBE_SPEED = *v;
-  //   } else if (arg.rfind("--zoom=", 0) == 0) {
-  //     if (auto v = parseFloat(arg.substr(7))) zoomDistance = *v;
-  //   } else if (arg.rfind("--title=", 0) == 0) {
-  //     customTitle = std::string(arg.substr(8));
-  //   }
-  // }
-  //
-  // std::vector<std::string> controls = {
-  //   "R=rotate", "S=stop camera", "C=continue camera",
-  //   "+/-=zoom", "U/D=pan", "ESC=exit"
-  // };
-  //
-  // std::string title = customTitle.empty()
-  //   ? buildWindowTitle("The RGB Color Cube", controls)
-  //   : customTitle;
-  //
-  // glutCreateWindow(title.c_str());
-  // */
+
   glutReshapeFunc(reshape);
   glutTimerFunc(100, timer, 0);
   glutDisplayFunc(display);

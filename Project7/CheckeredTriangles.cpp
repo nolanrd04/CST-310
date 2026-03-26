@@ -158,88 +158,47 @@ void keyboard(unsigned char key, int x, int y) {
   glutPostRedisplay();
 }
 
-// TODO (proposed change 2; not implemented):
-// Concrete code sketch for replacing switch/case with a shared control map:
-//
-// /*
-// #include <cctype>
-// #include <functional>
-// #include <unordered_map>
-//
-// struct ControlBinding {
-//   const char* actionName;
-//   const char* description;
-//   std::function<void()> run;
-// };
-//
-// static const std::unordered_map<char, ControlBinding> kControls = {
-//   {'p', {"pause_spin", "pause spinning", [] { spinning = false; }}},
-//   {'c', {"resume_spin", "continue spinning", [] { spinning = true; }}},
-//   {'d', {"move_up", "move up", [] { yOffset += MOVE_STEP; }}},
-//   {'u', {"move_down", "move down", [] { yOffset -= MOVE_STEP; }}},
-//   {'r', {"move_right", "move right", [] { xOffset -= MOVE_STEP; }}},
-//   {'l', {"move_left", "move left", [] { xOffset += MOVE_STEP; }}},
-//   {'+', {"zoom_in", "zoom in", [] {
-//     zoom += ZOOM_STEP;
-//     if (zoom > MAX_ZOOM) zoom = MAX_ZOOM;
-//   }}},
-//   {'-', {"zoom_out", "zoom out", [] {
-//     zoom -= ZOOM_STEP;
-//     if (zoom < MIN_ZOOM) zoom = MIN_ZOOM;
-//   }}},
-//   {'\x1b', {"exit", "exit app", [] { std::exit(0); }}},
-// };
-//
-// void keyboard(unsigned char key, int, int) {
-//   char normalized = static_cast<char>(std::tolower(static_cast<unsigned char>(key)));
-//   if (key == '=') normalized = '+';  // alias
-//   if (key == '_') normalized = '-';  // alias
-//
-//   auto it = kControls.find(normalized);
-//   if (it != kControls.end()) it->second.run();
-//   glutPostRedisplay();
-// }
-// */
+
+#include <cctype>
+#include <functional>
+#include <unordered_map>
+
+struct ControlBinding {
+  const char* actionName;
+  const char* description;
+  std::function<void()> run;
+};
+
+static const std::unordered_map<char, ControlBinding> kControls = {
+  {'p', {"pause_spin", "pause spinning", [] { spinning = false; }}},
+  {'c', {"resume_spin", "continue spinning", [] { spinning = true; }}},
+  {'d', {"move_up", "move up", [] { yOffset += MOVE_STEP; }}},
+  {'u', {"move_down", "move down", [] { yOffset -= MOVE_STEP; }}},
+  {'r', {"move_right", "move right", [] { xOffset -= MOVE_STEP; }}},
+  {'l', {"move_left", "move left", [] { xOffset += MOVE_STEP; }}},
+  {'+', {"zoom_in", "zoom in", [] {
+    zoom += ZOOM_STEP;
+    if (zoom > MAX_ZOOM) zoom = MAX_ZOOM;
+  }}},
+  {'-', {"zoom_out", "zoom out", [] {
+    zoom -= ZOOM_STEP;
+    if (zoom < MIN_ZOOM) zoom = MIN_ZOOM;
+  }}},
+  {'\x1b', {"exit", "exit app", [] { std::exit(0); }}},
+};
+
+void keyboard(unsigned char key, int, int) {
+  char normalized = static_cast<char>(std::tolower(static_cast<unsigned char>(key)));
+  if (key == '=') normalized = '+';  // alias
+  if (key == '_') normalized = '-';  // alias
+
+  auto it = kControls.find(normalized);
+  if (it != kControls.end()) it->second.run();
+  glutPostRedisplay();
+}
 
 // Initializes GLUT and enters the main loop.
 int main(int argc, char** argv) {
-  // TODO (proposed change 3; not implemented):
-  // Concrete code sketch for argv parsing with std::string_view:
-  //
-  // /*
-  // #include <charconv>
-  // #include <optional>
-  // #include <string>
-  // #include <string_view>
-  //
-  // static std::optional<float> parseFloat(std::string_view s) {
-  //   float out = 0.0f;
-  //   auto* first = s.data();
-  //   auto* last = s.data() + s.size();
-  //   auto [ptr, ec] = std::from_chars(first, last, out);
-  //   if (ec != std::errc() || ptr != last) return std::nullopt;
-  //   return out;
-  // }
-  //
-  // float rotationStep = ROTATION_STEP;  // then use in timer: rotationAngle += rotationStep;
-  //
-  // std::string windowTitle = "Textured Triangles";
-  // for (int i = 1; i < argc; ++i) {
-  //   std::string_view arg(argv[i]);
-  //
-  //   if (arg == "--paused") {
-  //     spinning = false;
-  //   } else if (arg.rfind("--speed=", 0) == 0) {
-  //     if (auto v = parseFloat(arg.substr(8))) rotationStep = *v;
-  //   } else if (arg.rfind("--zoom=", 0) == 0) {
-  //     if (auto v = parseFloat(arg.substr(7))) zoom = *v;
-  //   } else if (arg.rfind("--title=", 0) == 0) {
-  //     windowTitle = std::string(arg.substr(8));
-  //   }
-  // }
-  //
-  // glutCreateWindow(windowTitle.c_str());
-  // */
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
   glutInitWindowSize(520, 390);

@@ -36,6 +36,10 @@ const float GAP_RANGE_CELLS        = 4.0f;    // rand range (4–7 cells = 240�
 // Spike cluster
 const float SPIKE_INTRA_GAP        = 0.0f;    // spikes in a cluster touch (no gap)
 
+// Platform spike options
+const bool ENABLE_PLATFORM_TOP_SPIKES = true;
+const bool ENABLE_PLATFORM_UNDER_SPIKES = true;
+
 // Platform sizing (in cells)
 const float PLATFORM_MIN_CELLS     = 3.0f;    // min 3 cells wide = 180px
 const float PLATFORM_RANGE_CELLS   = 3.0f;    // rand range (3–5 cells = 180–300px)

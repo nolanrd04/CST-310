@@ -62,6 +62,10 @@ void timer(int value) {
     updateFpsCounter();
 
     if (gameState == PLAYING) {
+        if (!player.onGround) {
+            player.airRotationSpeed = computeAirRotationSpeed(player, level.obstacles, level.cameraX, GROUND_Y);
+        }
+
         player.update(DT, GROUND_Y);
         level.update(DT);
 
@@ -80,6 +84,7 @@ void timer(int value) {
                         player.y = obs.y + obs.h;
                         player.velY = 0;
                         player.onGround = true;
+                        player.airRotationSpeed = ROTATION_SPEED;
                         // Snap rotation to nearest 90°
                         player.rotation = snapRotationTo90(player.rotation);
                         player.timeInAir = 0;
