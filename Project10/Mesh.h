@@ -20,6 +20,10 @@ struct Vertex {
     glm::vec3 Normal; // Vec3 normal
     // TexCoords
     glm::vec2 TexCoords; // Vec2 texture coordinates
+    // Tangent
+    glm::vec3 Tangent; // Vec3 tangent
+    // Bitangent
+    glm::vec3 Bitangent; // Vec3 bitangent
 };
 
 // Define texture structure
@@ -122,6 +126,12 @@ private:
         // Vertex Texture Coords
         glEnableVertexAttribArray(2); // Enable vertex attrib
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, TexCoords)); // Set vertex attrib for texcoords
+        // Vertex Tangents
+        glEnableVertexAttribArray(3); // Enable vertex attrib
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Tangent)); // Set vertex attrib for tangent
+        // Vertex Bitangents
+        glEnableVertexAttribArray(4); // Enable vertex attrib
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Bitangent)); // Set vertex attrib for bitangent
 
         glBindVertexArray(0); // Bind 0
     }

@@ -125,6 +125,10 @@ private:
 			for(GLuint j = 0; j < face.mNumIndices; j++) // Iterate over face indices
 				indices.push_back(face.mIndices[j]); // Push back face indices
 		}
+		
+		// Calculate tangents and bitangents
+		this->calculateTangentsBitangents(vertices, indices); // Calculate tangents and bitangents
+		
 		// Process materials
 		if(mesh->mMaterialIndex >= 0)
 		{
@@ -146,6 +150,69 @@ private:
 		
 		// Return a mesh object created from the extracted mesh data
 		return Mesh(vertices, indices, textures); // Return Mesh object from vertices, indices, textures defined above
+	}
+	
+	// Calculate tangents and bitangents for all vertices based on triangle data
+	void calculateTangentsBitangents(vector<Vertex>& vertices, vector<GLuint>& indices)
+	{
+		// Initialize all tangents and bitangents to zero
+		for(GLuint i = 0; i < vertices.size(); i++) // Iterate over vertices
+		{
+			vertices[i].Tangent = glm::vec3(0.0f); // Initialize tangent to 0.0f
+			vertices[i].Bitangent = glm::vec3(0.0f); // Initialize bitangent to 0.0f
+		}
+		
+		// Calculate tangent and bitangent for each triangle
+		for(GLuint i = 0; i < indices.size(); i += 3) // Iterate over triangles (3 indices per triangle)
+		{
+			GLuint i1 = indices[i]; // Get first index
+			GLuint i2 = indices[i + 1]; // Get second index
+			GLuint i3 = indices[i + 2]; // Get third index
+			
+			glm::vec3 v1 = vertices[i1].Position; // Get first vertex position
+			glm::vec3 v2 = vertices[i2].Position; // Get second vertex position
+			glm::vec3 v3 = vertices[i3].Position; // Get third vertex position
+			
+			glm::vec2 uv1 = vertices[i1].TexCoords; // Get first vertex texture coordinate
+			glm::vec2 uv2 = vertices[i2].TexCoords; // Get second vertex texture coordinate
+			glm::vec2 uv3 = vertices[i3].TexCoords; // Get third vertex texture coordinate
+			
+			glm::vec3 e1 = v2 - v1; // Calculate edge 1
+			glm::vec3 e2 = v3 - v1; // Calculate edge 2
+			
+			glm::vec2 duv1 = uv2 - uv1; // Calculate texture coordinate delta 1
+			glm::vec2 duv2 = uv3 - uv1; // Calculate texture coordinate delta 2
+			
+			float f = 1.0f / (duv1.x * duv2.y - duv2.x * duv1.y); // Calculate denominator
+			
+			// Calculate tangent
+			glm::vec3 tangent;
+			tangent.x = f * (duv2.y * e1.x - duv1.y * e2.x); // Calculate tangent x
+			tangent.y = f * (duv2.y * e1.y - duv1.y * e2.y); // Calculate tangent y
+			tangent.z = f * (duv2.y * e1.z - duv1.y * e2.z); // Calculate tangent z
+			
+			// Calculate bitangent
+			glm::vec3 bitangent;
+			bitangent.x = f * (-duv2.x * e1.x + duv1.x * e2.x); // Calculate bitangent x
+			bitangent.y = f * (-duv2.x * e1.y + duv1.x * e2.y); // Calculate bitangent y
+			bitangent.z = f * (-duv2.x * e1.z + duv1.x * e2.z); // Calculate bitangent z
+			
+			// Accumulate tangent and bitangent to each vertex of the triangle
+			vertices[i1].Tangent += tangent; // Add tangent to first vertex
+			vertices[i2].Tangent += tangent; // Add tangent to second vertex
+			vertices[i3].Tangent += tangent; // Add tangent to third vertex
+			
+			vertices[i1].Bitangent += bitangent; // Add bitangent to first vertex
+			vertices[i2].Bitangent += bitangent; // Add bitangent to second vertex
+			vertices[i3].Bitangent += bitangent; // Add bitangent to third vertex
+		}
+		
+		// Normalize tangents and bitangents
+		for(GLuint i = 0; i < vertices.size(); i++) // Iterate over vertices
+		{
+			vertices[i].Tangent = glm::normalize(vertices[i].Tangent); // Normalize tangent
+			vertices[i].Bitangent = glm::normalize(vertices[i].Bitangent); // Normalize bitangent
+		}
 	}
 	
 	// Checks all material textures of a given type and loads the textures if they're not loaded yet.
