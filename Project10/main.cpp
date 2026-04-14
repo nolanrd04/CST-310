@@ -1,4 +1,5 @@
 #include <iostream>  // iostream include
+#include <cstring>   // For std::memcpy
 
 // GLEW
 #define GLEW_STATIC // Define glew_static
@@ -197,6 +198,50 @@ int main() {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 1, 1, 0, GL_RED, GL_UNSIGNED_BYTE, grayPixel);
     }
 
+    // LOAD CUBEMAP TEXTURE for skybox (6 face images)
+    GLuint cubemapTexture;
+    glGenTextures(1, &cubemapTexture); // Generate cubemap texture
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture); // Bind as cubemap
+
+    // Face filenames in the order OpenGL expects them
+    // Note: posy and negy are swapped to correct vertical orientation after pixel flip
+    const char* cubemapFaces[6] = {
+        "posx.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_X (right)
+        "negx.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_X (left)
+        "negy.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y (top) - swapped
+        "posy.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y (bottom) - swapped
+        "posz.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Z (front)
+        "negz.jpg"  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z (back)
+    };
+    for (int i = 0; i < 6; i++) {
+        unsigned char* faceImage = SOIL_load_image(cubemapFaces[i], &width, &height, 0, SOIL_LOAD_RGB);
+        if (faceImage) {
+            // Flip image vertically: SOIL loads row 0 at top, OpenGL expects row 0 at bottom
+            unsigned char* flipped = new unsigned char[width * height * 3];
+            for (int row = 0; row < height; row++) {
+                std::memcpy(flipped + row * width * 3,
+                           faceImage + (height - 1 - row) * width * 3,
+                           width * 3);
+            }
+            std::cout << "Loaded cubemap face: " << cubemapFaces[i] << " (" << width << "x" << height << ")" << std::endl;
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, flipped);
+            delete[] flipped;
+            SOIL_free_image_data(faceImage);
+        } else {
+            std::cerr << "Failed to load cubemap face: " << cubemapFaces[i] << std::endl;
+            // Fill missing face with a solid color so the cubemap is still valid
+            unsigned char grayPixel[3] = {100, 100, 100};
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, grayPixel);
+        }
+    }
+    // Set cubemap texture parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Linear filtering
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Linear filtering
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Clamp edges to avoid seams
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Clamp edges to avoid seams
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); // Clamp edges to avoid seams (3rd axis for cubemaps)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0); // Unbind cubemap
+
     // Game Loop
     while (!glfwWindowShouldClose(window)) {
         // Calculate deltaTime for camera movement
@@ -256,34 +301,18 @@ int main() {
             }
         }
 
-        // CUBE
+        // CUBE - environment mapped cube the camera can walk into
         cubeShader.Use(); // Activate cube shader
 
-        // Set uniform locations
-        GLint cubeColorLoc = glGetUniformLocation(cubeShader.Program, "cubeColor"); // Retrieve uniform location
-        lightColorLoc = glGetUniformLocation(cubeShader.Program, "lightColor"); // Reset uniform location for cubeShader
-        lightPosLoc = glGetUniformLocation(cubeShader.Program, "lightPos"); // Reset uniform location for cubeShader
-        viewPosLoc = glGetUniformLocation(cubeShader.Program, "viewPos"); // Reset uniform location for cubeShader
-
-        // Pass to shaders
-        glUniform3f(cubeColorLoc, 1.0f, 0.0f, 0.0f); // Pass cube color to uniform
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Pass light color to uniform
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z); // Pass light position to uniform
-        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass camera position to uniform
-
-        // Bind textures for parallax mapping
+        // Bind cubemap texture for environment mapping
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-        glUniform1i(glGetUniformLocation(cubeShader.Program, "diffuseTexture"), 0);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, heightMap);
-        glUniform1i(glGetUniformLocation(cubeShader.Program, "heightMap"), 1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture); // Bind the 6-face cubemap
+        glUniform1i(glGetUniformLocation(cubeShader.Program, "skybox"), 0); // Pass to skybox uniform
 
         glm::mat4 view_cube = view; // Create mat4 view_cube equal to identity view
-        view_cube = glm::translate(view_cube, glm::vec3(0.0f, 0.0f, -5.0f)); // Translate cube back
+        view_cube = glm::translate(view_cube, glm::vec3(0.0f, 0.1f, -5.0f)); // Translate cube back and up (above ground plane)
 
-        // Get uniform location
+        // Get uniform locations
         modelLoc = glGetUniformLocation(cubeShader.Program, "model"); // Reset modelLoc using cubeShader
         viewLoc = glGetUniformLocation(cubeShader.Program, "view"); // Reset viewLoc using cubeShader
         projLoc = glGetUniformLocation(cubeShader.Program, "projection"); // Reset projLoc using cubeShader
@@ -291,11 +320,17 @@ int main() {
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); // Pass model to shader
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_cube)); // Pass view_cube to shader
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection to shader
-        // Draw cube
+
         glBindVertexArray(VAO); // Bind vertex arrays
         glDrawArrays(GL_TRIANGLES, 0, 36); // Draw cube
 
-        
+        // ENVIRONMENT CUBE - render when camera is inside the small cube
+        // Check if camera is inside the small cube bounds: center at (0, 0.1, -5), size 1 unit
+        glm::vec3 camPos = camera.Position;
+        bool insideCube = (camPos.x > -0.5f && camPos.x < 0.5f &&
+                           camPos.y > -0.4f && camPos.y < 1.1f &&
+                           camPos.z > -5.5f && camPos.z < -4.5f);
+
         // CYLINDER
         cylinderShader.Use(); // Activate cylinder shader
 
@@ -370,6 +405,7 @@ int main() {
     // Deallocate resources
     glDeleteVertexArrays(1, &VAO); // Deallocate vertex arrays
     glDeleteBuffers(1, &VBO); // Deallocate buffers
+    glDeleteTextures(1, &cubemapTexture); // Deallocate cubemap texture
     glfwTerminate(); // Terminate window
     return 0; // Returns 0 for end of int main()
 

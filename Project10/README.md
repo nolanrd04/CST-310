@@ -131,7 +131,7 @@ y axis = cross(-z, x)
 ## Compilation
 
 ```bash
-g++ -o project10 main.cpp -lGL -lGLU -lGLEW -lglut -lm
+g++ -o project10 main.cpp -lGL -lGLU -lGLEW -lglfw -lSOIL -lassimp -lm
 ```
 
 ## Controls
