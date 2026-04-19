@@ -90,36 +90,36 @@ int main() {
         -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom left
 
         // Left face (normal: -1, 0, 0)
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper far
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
+        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper far
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
         -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower close
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
 
         // Right face (normal: 1, 0, 0)
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper far
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
+        0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper far
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower far
         0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Lower close
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Upper close
 
         // Bottom face (normal: 0, -1, 0)
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Left far
-        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Right far
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Right close
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Right close
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Left close
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Left far
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Left far
+        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Right far
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Right close
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Right close
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Left close
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Left far
 
         // Top Face (normal: 0, 1, 0)
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Left far
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Left far
         0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Right far
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Right close
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Right close
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Left close
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f // Left far
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Right close
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Right close
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Left close
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f // Left far
     };
     GLuint VBO, VAO; // Initialize VBO, VAO
     glGenVertexArrays(1, &VAO); // Generate VAO
@@ -203,29 +203,20 @@ int main() {
     glGenTextures(1, &cubemapTexture); // Generate cubemap texture
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture); // Bind as cubemap
 
-    // Face filenames in the order OpenGL expects them
-    // Note: posy and negy are swapped to correct vertical orientation after pixel flip
+    // Face filenames in OpenGL cubemap order
     const char* cubemapFaces[6] = {
         "posx.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_X (right)
         "negx.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_X (left)
-        "negy.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y (top) - swapped
-        "posy.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y (bottom) - swapped
+        "posy.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y (top)
+        "negy.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y (bottom)
         "posz.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Z (front)
         "negz.jpg"  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z (back)
     };
     for (int i = 0; i < 6; i++) {
         unsigned char* faceImage = SOIL_load_image(cubemapFaces[i], &width, &height, 0, SOIL_LOAD_RGB);
         if (faceImage) {
-            // Flip image vertically: SOIL loads row 0 at top, OpenGL expects row 0 at bottom
-            unsigned char* flipped = new unsigned char[width * height * 3];
-            for (int row = 0; row < height; row++) {
-                std::memcpy(flipped + row * width * 3,
-                           faceImage + (height - 1 - row) * width * 3,
-                           width * 3);
-            }
             std::cout << "Loaded cubemap face: " << cubemapFaces[i] << " (" << width << "x" << height << ")" << std::endl;
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, flipped);
-            delete[] flipped;
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, faceImage);
             SOIL_free_image_data(faceImage);
         } else {
             std::cerr << "Failed to load cubemap face: " << cubemapFaces[i] << std::endl;
@@ -301,100 +292,100 @@ int main() {
             }
         }
 
-        // CUBE - environment mapped cube the camera can walk into
+        // CUBE - parallax mapped with bump picture + bump map
         cubeShader.Use(); // Activate cube shader
 
-        // Bind cubemap texture for environment mapping
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture); // Bind the 6-face cubemap
-        glUniform1i(glGetUniformLocation(cubeShader.Program, "skybox"), 0); // Pass to skybox uniform
+        lightColorLoc = glGetUniformLocation(cubeShader.Program, "lightColor"); // Reset lightColor location
+        lightPosLoc = glGetUniformLocation(cubeShader.Program, "lightPos"); // Reset lightPos location
+        viewPosLoc = glGetUniformLocation(cubeShader.Program, "viewPos"); // Reset viewPos location
 
-        glm::mat4 view_cube = view; // Create mat4 view_cube equal to identity view
-        view_cube = glm::translate(view_cube, glm::vec3(0.0f, 0.1f, -5.0f)); // Translate cube back and up (above ground plane)
+        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Pass light color to uniform
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z); // Pass light position to uniform
+        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass camera position to uniform
+
+        // Bind bump picture + bump map for cube parallax mapping
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+        glUniform1i(glGetUniformLocation(cubeShader.Program, "diffuseTexture"), 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, heightMap);
+        glUniform1i(glGetUniformLocation(cubeShader.Program, "heightMap"), 1);
+
+        glm::mat4 model_cube = glm::mat4(1.0f); // Create cube model matrix
+        model_cube = glm::translate(model_cube, glm::vec3(0.0f, 0.1f, -5.0f)); // Place cube in world
 
         // Get uniform locations
         modelLoc = glGetUniformLocation(cubeShader.Program, "model"); // Reset modelLoc using cubeShader
         viewLoc = glGetUniformLocation(cubeShader.Program, "view"); // Reset viewLoc using cubeShader
         projLoc = glGetUniformLocation(cubeShader.Program, "projection"); // Reset projLoc using cubeShader
+
         // Pass locations to shader
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); // Pass model to shader
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_cube)); // Pass view_cube to shader
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_cube)); // Pass cube model to shader
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view)); // Pass camera view to shader
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection to shader
 
         glBindVertexArray(VAO); // Bind vertex arrays
         glDrawArrays(GL_TRIANGLES, 0, 36); // Draw cube
 
-        // ENVIRONMENT CUBE - render when camera is inside the small cube
-        // Check if camera is inside the small cube bounds: center at (0, 0.1, -5), size 1 unit
-        glm::vec3 camPos = camera.Position;
-        bool insideCube = (camPos.x > -0.5f && camPos.x < 0.5f &&
-                           camPos.y > -0.4f && camPos.y < 1.1f &&
-                           camPos.z > -5.5f && camPos.z < -4.5f);
-
         // CYLINDER
         cylinderShader.Use(); // Activate cylinder shader
 
-        GLint cylinderColorLoc = glGetUniformLocation(cylinderShader.Program, "cylinderColor"); // Retrieve cylinderColor location
         lightColorLoc = glGetUniformLocation(cylinderShader.Program, "lightColor"); // Reset lightColor location
         lightPosLoc = glGetUniformLocation(cylinderShader.Program, "lightPos"); // Reset lightPos location
         viewPosLoc = glGetUniformLocation(cylinderShader.Program, "viewPos"); // Reset viewPos location
 
-        glUniform3f(cylinderColorLoc, 1.0f, 1.0f, 1.0f); // Pass white color to uniform (allows texture to show through)
         glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Pass light color to uniform
         glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z); // Pass light position to uniform
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass camera position to uniform
 
-        // Bind normal map texture for bump mapping
+        // Bind textures for bump mapping on cylinder
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+        glUniform1i(glGetUniformLocation(cylinderShader.Program, "diffuseTexture"), 0);
+
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, heightMap);
-        glUniform1i(glGetUniformLocation(cylinderShader.Program, "normalMap"), 1);
+        glUniform1i(glGetUniformLocation(cylinderShader.Program, "heightMap"), 1);
+        glUniform2f(glGetUniformLocation(cylinderShader.Program, "uvScale"), 3.0f, 2.0f); // Repeat texture on cylinder
 
-        modelLoc = glGetUniformLocation(cylinderShader.Program, "model"); // Reset view location for cylinderShader
+        modelLoc = glGetUniformLocation(cylinderShader.Program, "model"); // Reset model location for cylinderShader
         viewLoc = glGetUniformLocation(cylinderShader.Program, "view"); // Reset view location for cylinderShader
-        projLoc = glGetUniformLocation(cylinderShader.Program, "projection"); // Reset view location for cylinderShader
+        projLoc = glGetUniformLocation(cylinderShader.Program, "projection"); // Reset projection location for cylinderShader
 
-        glm::mat4 view_cylinder = view; // Create mat4 view_cylinder using generic view identity
-        view_cylinder = glm::translate(view_cylinder, glm::vec3(-2.0f, -3.0f, -5.0f)); // Translate cylinder to sphere's position
-        view_cylinder = glm::scale(view_cylinder, glm::vec3(0.5, 3.0, 0.5)); // Increase height of cylinder
+        glm::mat4 model_cylinder = glm::mat4(1.0f); // Initialize cylinder model matrix
+        model_cylinder = glm::translate(model_cylinder, glm::vec3(-2.0f, -3.0f, -5.0f)); // Translate cylinder
+        model_cylinder = glm::scale(model_cylinder, glm::vec3(0.5f, 3.0f, 0.5f)); // Scale cylinder
 
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_cylinder)); // Pass view_cylinder to shader
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection to shader
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); // Pass moel to shader
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view)); // Pass camera view matrix
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_cylinder)); // Pass cylinder model matrix
 
         cylinderModel.Draw(cylinderShader); // Draw obj model
 
         
-        // SPHERE
-        sphereShader.Use(); // Activate sphereShader
+        // SPHERE - environment mapped with cubemap
+        sphereShader.Use(); // Activate sphere shader
 
-        lightColorLoc = glGetUniformLocation(sphereShader.Program, "lightColor"); // Reset lightColor location for sphereShader
-        lightPosLoc = glGetUniformLocation(sphereShader.Program, "lightPos"); // Reset lightPos location for sphereShader
         viewPosLoc = glGetUniformLocation(sphereShader.Program, "viewPos"); // Reset viewPos location for sphereShader
+        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass camera position to uniform
 
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Pass in light color to uniform
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z); // Pass in light position to uniform
-        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass in camera position to uniform
-
-        // Bind textures for parallax mapping
+        // Bind cubemap texture for sphere environment mapping
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-        glUniform1i(glGetUniformLocation(sphereShader.Program, "diffuseTexture"), 0);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, heightMap);
-        glUniform1i(glGetUniformLocation(sphereShader.Program, "heightMap"), 1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glUniform1i(glGetUniformLocation(sphereShader.Program, "skybox"), 0);
 
         modelLoc = glGetUniformLocation(sphereShader.Program, "model"); // Reset model uniform location for sphereShader
         viewLoc = glGetUniformLocation(sphereShader.Program, "view"); // Reset view uniform location for sphereShader
         projLoc = glGetUniformLocation(sphereShader.Program, "projection"); // Reset projection uniform location for sphereShader
 
-        glm::mat4 view_sphere = view; // Create mat4 view_sphere equal to view identity
-        view_sphere = glm::translate(view_sphere, glm::vec3(1.5f, 0.0f, -5.5f)); // Translate sphere to cylinder's position
-        view_sphere = glm::scale(view_sphere, glm::vec3(0.5f, 0.5f, 0.5f)); // Scale down sphere
+        glm::mat4 model_sphere = glm::mat4(1.0f); // Initialize sphere model matrix
+        model_sphere = glm::translate(model_sphere, glm::vec3(1.5f, 0.0f, -5.5f)); // Translate sphere
+        model_sphere = glm::scale(model_sphere, glm::vec3(0.5f, 0.5f, 0.5f)); // Scale sphere
         
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view_sphere)); // Pass view_sphere to uniform
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection to uniform
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model)); // Pass model to uniform
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view)); // Pass camera view matrix
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_sphere)); // Pass sphere model matrix
 
         sphereModel.Draw(sphereShader); // Draw sphere obj model
 

@@ -1,37 +1,20 @@
 #version 330 core
-layout (location = 0) in vec3 aPos; // Receives aPos
-layout (location = 1) in vec3 aNormal; // Receives aNormal
-layout (location = 2) in vec2 aTexCoord; // Receives aTexCoord
-layout (location = 3) in vec3 aTangent; // Receives aTangent
-layout (location = 4) in vec3 aBitangent; // Receives aBitangent
+layout (location = 0) in vec3 aPos;    // Sphere position
+layout (location = 1) in vec3 aNormal; // Sphere normal
 
-out vec3 FragPos; // Returns FragPos
-out vec3 Normal; // Returns Normal
-out vec2 TexCoord; // Returns TexCoord
-out mat3 TBN; // Returns TBN matrix
-out vec3 TangentViewPos; // Returns tangent space view position
-out vec3 TangentFragPos; // Returns tangent space fragment position
+out vec3 WorldPos;    // World-space position
+out vec3 WorldNormal; // World-space normal
 
-uniform mat4 model; // Receives model uniform
-uniform mat4 view; // Receives view uniform
-uniform mat4 projection; // Receives projection uniform
-uniform vec3 viewPos; // Receives viewPos uniform
+uniform mat4 model;      // Model matrix
+uniform mat4 view;       // View matrix
+uniform mat4 projection; // Projection matrix
 
 void main() {
-    gl_Position = projection * view * model * vec4(aPos, 1.0f); // Implements transformations
-    FragPos = vec3(model * vec4(aPos, 1.0)); // Sets fragment position
-    Normal = mat3(transpose(inverse(model))) * aNormal; // Normalizes normal
-    TexCoord = aTexCoord; // Set texture coordinate
-    
-    // Transform tangent and bitangent to world space
-    vec3 T = normalize(mat3(model) * aTangent); // Normalize tangent
-    vec3 B = normalize(mat3(model) * aBitangent); // Normalize bitangent
-    vec3 N = normalize(Normal); // Normalize normal
-    
-    // Create TBN matrix (transpose for transformation from world space to tangent space)
-    TBN = transpose(mat3(T, B, N)); // Create TBN matrix
-    
-    // Transform fragment position and camera position to tangent space
-    TangentFragPos = TBN * FragPos; // Transform fragment position
-    TangentViewPos = TBN * viewPos; // Transform view position
+    vec4 worldPos = model * vec4(aPos, 1.0f);       // Object -> world
+    WorldPos = worldPos.xyz;                        // Pass world position
+
+    mat3 normalMatrix = transpose(inverse(mat3(model))); // Correct normal transform
+    WorldNormal = normalize(normalMatrix * aNormal);     // Pass world normal
+
+    gl_Position = projection * view * worldPos;     // Final clip-space position
 }
