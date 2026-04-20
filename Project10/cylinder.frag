@@ -42,23 +42,24 @@ void main()
     vec3 lightDir = normalize(tangentLightPos - tangentFragPos); // Tangent-space light direction
     vec3 viewDir = normalize(tangentViewPos - tangentFragPos); // Tangent-space view direction
 
-    // Sample base color so bump + picture are layered together
-    vec3 diffuseColor = texture(diffuseTexture, tiledTexCoord).rgb; // Diffuse albedo
+    // Sample height map and convert to grayscale luminance
+    vec3 mapSample = texture(heightMap, tiledTexCoord).rgb; // Sample texture
+    float luminance = dot(mapSample, vec3(0.299, 0.587, 0.114)); // Calculate luminance
 
     // ambient
-    float ambientStrength = 0.35; // Set ambient strength
+    float ambientStrength = 2.0; // Set ambient strength
     vec3 ambient = ambientStrength * lightColor; // Sets ambient
-  	
-    // diffuse 
+
+    // diffuse
     float diff = max(dot(tangentNormal, lightDir), 0.0); // Diffuse contribution
     vec3 diffuse = diff * lightColor; // Sets diffuse
-    
+
     // specular
     float specularStrength = 0.25f; // Sets specular strength
     vec3 reflectDir = reflect(-lightDir, tangentNormal); // Sets reflect direction
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0); // Sets specular based on power, max, and dot product
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0); // Sets specular based on power, max, and dot product
     vec3 specular = specularStrength * spec * lightColor; // Sets specular
-        
-    vec3 result = (ambient + diffuse + specular) * diffuseColor; // Layer bumped lighting with diffuse texture
+
+    vec3 result = (ambient + diffuse + specular) * luminance; // Multiply by grayscale luminance to get colorless texture
     FragColor = vec4(result, 1.0f); // Sets vec4 based on result
 } 

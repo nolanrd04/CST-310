@@ -203,20 +203,28 @@ int main() {
     glGenTextures(1, &cubemapTexture); // Generate cubemap texture
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture); // Bind as cubemap
 
-    // Face filenames in OpenGL cubemap order
+    // Face filenames in OpenGL cubemap order (posy and negy swapped to correct vertical orientation)
     const char* cubemapFaces[6] = {
         "posx.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_X (right)
         "negx.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_X (left)
-        "posy.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y (top)
-        "negy.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y (bottom)
+        "negy.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Y (top) - swapped
+        "posy.jpg", // GL_TEXTURE_CUBE_MAP_NEGATIVE_Y (bottom) - swapped
         "posz.jpg", // GL_TEXTURE_CUBE_MAP_POSITIVE_Z (front)
         "negz.jpg"  // GL_TEXTURE_CUBE_MAP_NEGATIVE_Z (back)
     };
     for (int i = 0; i < 6; i++) {
         unsigned char* faceImage = SOIL_load_image(cubemapFaces[i], &width, &height, 0, SOIL_LOAD_RGB);
         if (faceImage) {
+            // Flip image vertically: SOIL loads row 0 at top, OpenGL expects row 0 at bottom
+            unsigned char* flipped = new unsigned char[width * height * 3];
+            for (int row = 0; row < height; row++) {
+                std::memcpy(flipped + row * width * 3,
+                           faceImage + (height - 1 - row) * width * 3,
+                           width * 3);
+            }
             std::cout << "Loaded cubemap face: " << cubemapFaces[i] << " (" << width << "x" << height << ")" << std::endl;
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, faceImage);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, flipped);
+            delete[] flipped;
             SOIL_free_image_data(faceImage);
         } else {
             std::cerr << "Failed to load cubemap face: " << cubemapFaces[i] << std::endl;
@@ -292,28 +300,16 @@ int main() {
             }
         }
 
-        // CUBE - parallax mapped with bump picture + bump map
+        // CUBE - environment mapped cube the camera can walk into
         cubeShader.Use(); // Activate cube shader
 
-        lightColorLoc = glGetUniformLocation(cubeShader.Program, "lightColor"); // Reset lightColor location
-        lightPosLoc = glGetUniformLocation(cubeShader.Program, "lightPos"); // Reset lightPos location
-        viewPosLoc = glGetUniformLocation(cubeShader.Program, "viewPos"); // Reset viewPos location
-
-        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Pass light color to uniform
-        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z); // Pass light position to uniform
-        glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass camera position to uniform
-
-        // Bind bump picture + bump map for cube parallax mapping
+        // Bind cubemap texture for environment mapping
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
-        glUniform1i(glGetUniformLocation(cubeShader.Program, "diffuseTexture"), 0);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, heightMap);
-        glUniform1i(glGetUniformLocation(cubeShader.Program, "heightMap"), 1);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture); // Bind the 6-face cubemap
+        glUniform1i(glGetUniformLocation(cubeShader.Program, "skybox"), 0); // Pass to skybox uniform
 
         glm::mat4 model_cube = glm::mat4(1.0f); // Create cube model matrix
-        model_cube = glm::translate(model_cube, glm::vec3(0.0f, 0.1f, -5.0f)); // Place cube in world
+        model_cube = glm::translate(model_cube, glm::vec3(0.0f, 0.0f, -5.5f)); // Place cube in world aligned with other shapes
 
         // Get uniform locations
         modelLoc = glGetUniformLocation(cubeShader.Program, "model"); // Reset modelLoc using cubeShader
@@ -364,16 +360,26 @@ int main() {
         cylinderModel.Draw(cylinderShader); // Draw obj model
 
         
-        // SPHERE - environment mapped with cubemap
+        // SPHERE - bump mapped with height map
         sphereShader.Use(); // Activate sphere shader
 
-        viewPosLoc = glGetUniformLocation(sphereShader.Program, "viewPos"); // Reset viewPos location for sphereShader
+        lightColorLoc = glGetUniformLocation(sphereShader.Program, "lightColor"); // Reset lightColor location
+        lightPosLoc = glGetUniformLocation(sphereShader.Program, "lightPos"); // Reset lightPos location
+        viewPosLoc = glGetUniformLocation(sphereShader.Program, "viewPos"); // Reset viewPos location
+
+        glUniform3f(lightColorLoc, 1.0f, 1.0f, 1.0f); // Pass light color to uniform
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z); // Pass light position to uniform
         glUniform3f(viewPosLoc, camera.Position.x, camera.Position.y, camera.Position.z); // Pass camera position to uniform
 
-        // Bind cubemap texture for sphere environment mapping
+        // Bind bump textures for sphere
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glUniform1i(glGetUniformLocation(sphereShader.Program, "skybox"), 0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexture);
+        glUniform1i(glGetUniformLocation(sphereShader.Program, "diffuseTexture"), 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, heightMap);
+        glUniform1i(glGetUniformLocation(sphereShader.Program, "heightMap"), 1);
+        glUniform2f(glGetUniformLocation(sphereShader.Program, "uvScale"), 2.0f, 2.0f); // Repeat texture on sphere
 
         modelLoc = glGetUniformLocation(sphereShader.Program, "model"); // Reset model uniform location for sphereShader
         viewLoc = glGetUniformLocation(sphereShader.Program, "view"); // Reset view uniform location for sphereShader
@@ -382,7 +388,7 @@ int main() {
         glm::mat4 model_sphere = glm::mat4(1.0f); // Initialize sphere model matrix
         model_sphere = glm::translate(model_sphere, glm::vec3(1.5f, 0.0f, -5.5f)); // Translate sphere
         model_sphere = glm::scale(model_sphere, glm::vec3(0.5f, 0.5f, 0.5f)); // Scale sphere
-        
+
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view)); // Pass camera view matrix
         glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection)); // Pass projection
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model_sphere)); // Pass sphere model matrix
